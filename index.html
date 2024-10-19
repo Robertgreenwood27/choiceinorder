@@ -138,6 +138,113 @@ display: none;
 
 .checklist-item input[type="checkbox"] { margin-right: 10px; }
 
+.toggle {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 20px;
+}
+
+.toggle input[type="radio"] {
+  display: none;
+}
+
+.toggle label {
+  padding: 10px 20px;
+  background-color: #0277bd;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+  margin: 0 5px;
+}
+
+.toggle input[type="radio"]:checked + label {
+  background-color: #01579b;
+}
+
+.pill-toggle {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 10px;
+}
+
+.pill-toggle label {
+  padding: 10px 20px;
+  background-color: #0277bd;
+  color: white;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.pill-toggle input[type="checkbox"]:checked + label {
+  background-color: #01579b;
+}
+
+.pill-toggle label:hover {
+  background-color: #0288d1;
+}
+
+.switch-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 20px;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 34px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #2196F3;
+}
+
+input:checked + .slider:before {
+  transform: translateX(26px);
+}
+
+.switch-labels {
+  display: flex;
+  justify-content: space-between;
+  width: 100px;
+  margin-top: 10px;
+  color: #fff;
+}
 </style>
 </head>
 <body>
@@ -216,8 +323,20 @@ display: none;
     </form>
   </div>
   <div class="column">
-    <h2>Sorted Names</h2>
+    <h2>Sorted Channels</h2>
+    
     <div id="output"></div>
+    
+    <div class="switch-container">
+      <label class="switch">
+        <input type="checkbox" id="toggleCSGAOS" onchange="toggleChannelOrder()">
+        <span class="slider"></span>
+      </label>
+      <div class="switch-labels">
+        <span>CSG</span>
+        <span>AOS</span>
+      </div>
+    </div>
   </div>
 </div>
 <form>
@@ -233,111 +352,122 @@ display: none;
 </div>
 
 <script>
+    let currentOrder = 'CSG';
+    const channelsCSG = ["animal planet", "cartoon network", "disney", "nickelodeon", "discovery", "history", "tlc", "tv land", "we tv", "wetv", "a&e", "aspire", "bravo", "food network", "hgtv", "id", "impact", "nat geo", "national geographic", "syfy", "travel channel", "cmt", "gameshow", "game show", "gsn", "mtv2", "mtv 2", "amc", "bet", "cleo", "comedy central", "e!", "fx", "hallmark", "hallmark movies", "lifetime", "lmn", "mtv", "own", "oxygen", "paramount", "pop", "revolt", "smithsonian", "tbs", "tcm", "tnt", "tru tv", "tv one", "usa", "vh1", "bbc america", "bbc world news", "thegrio", "black news network", "cnbc", "cnn", "fox business", "fox news", "hln", "msnbc", "weather channel", "cbs sports", "espn", "espn2", "espn 2", "fox sports 1",  "fs1", "fs 1", "fox sports 2", "fs2", "fs 2", "balley sports", "golf", "spectrum sports net", "nfl", "bein en espanol", "bein sports", "cnn en espanol", "discovery en espanol", "espn deportes", "fox deportes", "galavision", "univision deportes", "wapa america"];
+    const channelsAOS = [
+  "animal planet", "cartoon network", "disney", "nickelodeon", "discovery", "history", "tlc", "tv land", "a&e", "aspire", "bravo", "food network", "hgtv", "id", "impact", "nat geo", "national geographic", "syfy", "travel channel", "we tv", "wetv", "amc", "bet", "cmt", "cleo", "comedy central", "e!", "fx", "game show", "gameshow", "gsn", "hallmark", "hallmark movies", "lifetime", "lmn", "mtv", "mtv 2", "mtv2", "own", "oxygen", "pop", "revolt", "smithsonian", "paramount", "tbs", "tcm", "tnt", "tv one", "tru tv", "usa", "vh1", "bbc america", "bbc world news", "thegrio", "cnbc", "cnn", "fox business", "fox news", "hln", "msnbc", "weather channel", "cbs sports", "espn", "espn2", "espn 2", "fox sports 1", "fs1", "fs 1", "fox sports 2", "fs2", "fs 2", "golf", "nfl", "bein en espanol", "bein sports", "cnn en espanol", "discovery en espanol", "espn deportes", "fox deportes", "galavision", "univision deportes", "wapa america", "balley sports", "spectrum sports net"];
+
+    function toggleChannelOrder() {
+      currentOrder = document.getElementById("toggleCSGAOS").checked ? 'AOS' : 'CSG';
+      sortNames();
+    }
+
     function sortNames() {
-      // Define the correct order of names
-      const channels = ["animal planet", "cartoon network", "disney", "nickelodeon", "discovery", "history", "tlc", "tv land", "we tv", "wetv", "a&e", "aspire", "bravo", "food network", "hgtv", "id", "impact", "nat geo", "national geographic", "syfy", "travel channel", "cmt", "gameshow", "game show", "gsn", "mtv2", "mtv 2", "amc", "bet", "cleo", "comedy central", "e!", "fx", "hallmark", "hallmark movies", "lifetime", "lmn", "mtv", "own", "oxygen", "paramount", "pop", "revolt", "smithsonian", "tbs", "tcm", "tnt", "tru tv", "tv one", "usa", "vh1", "bbc america", "bbc world news", "thegrio", "black news network", "cnbc", "cnn", "fox business", "fox news", "hln", "msnbc", "weather channel", "cbs sports", "espn", "espn2", "espn 2", "fox sports 1",  "fs1", "fs 1", "fox sports 2", "fs2", "fs 2", "balley sports", "golf", "spectrum sports net", "nfl", "bein en espanol", "bein sports", "cnn en espanol", "discovery en espanol", "espn deportes", "fox deportes", "galavision", "univision deportes", "wapa america"];
+      // Select the correct channel order based on the toggle
+      const channels = currentOrder === 'CSG' ? channelsCSG : channelsAOS;
 
- // Get the input values and store them in an array
-  let inputValues = [];
-  for (let i = 1; i <= 15; i++) {
-    let input = document.getElementById("name" + i);
-    if (input && input.value) {
-      inputValues.push(input.value.toLowerCase()); // convert to lowercase to match channel names
+      // Get the input values and store them in an array
+      let inputValues = [];
+      for (let i = 1; i <= 15; i++) {
+        let input = document.getElementById("name" + i);
+        if (input && input.value) {
+          inputValues.push(input.value.toLowerCase()); // convert to lowercase to match channel names
+        }
+      }
+
+      //If an input value is a partial match, replace it with the corresponding full channel name
+      inputValues = inputValues.map((value) => {
+        let regex = new RegExp("^" + value, "i");
+        let match = channels.find((channel) => regex.test(channel));
+        if (match && match.toLowerCase() === "mtv2" && value.toLowerCase() === "mtv") {
+            return "mtv";
+        }
+        return match ? match : value;
+      });
+
+      // sort the input values based on the index of their corresponding channel names in the channels array
+      let sortedValues = inputValues.sort((a, b) => {
+        let aIndex = channels.indexOf(a);
+        let bIndex = channels.indexOf(b);
+        if (aIndex === -1) aIndex = Number.MAX_VALUE;
+        if (bIndex === -1) bIndex = Number.MAX_VALUE;
+        return aIndex - bIndex;
+      });
+
+      // check for duplicates in the sorted list
+      let hasDuplicates = new Set(sortedValues).size !== sortedValues.length;
+      if (hasDuplicates) {
+        document.getElementById("duplicateWarning").style.display = "block";
+      } else {
+        document.getElementById("duplicateWarning").style.display = "none";
+      }
+
+      // Generate the HTML for the sorted names with checkboxes
+      let outputHTML = "";
+
+      sortedValues.forEach((value) => {
+        let checked = channels.includes(value.toLowerCase()) ? "checked" : "";
+        let color = channels.includes(value.toLowerCase()) ? "style='background-color: #0277bd;'" : "";
+        outputHTML += `<input type="checkbox" ${checked} ${color}> ${value}<br>`;
+      });
+
+      document.getElementById("output").innerHTML = outputHTML;
     }
-  }
 
-// check for duplicates
-let hasDuplicates = new Set(inputValues).size !== inputValues.length;
-if (hasDuplicates) {
-document.getElementById("duplicateWarning").style.display = "block";
-} else {
-document.getElementById("duplicateWarning").style.display = "none";
-}
-
-//If an input value is a partial match, replace it with the corresponding full channel name
-inputValues = inputValues.map((value) => {
-    let regex = new RegExp("^" + value, "i");
-    let match = channels.find((channel) => regex.test(channel));
-    if (match && match.toLowerCase() === "mtv2" && value.toLowerCase() === "mtv") {
-        return "mtv";
+    // Add event listeners to input fields to update the output div in real-time
+    for (let i = 1; i <= 15; i++) {
+      let input = document.getElementById("name" + i);
+      if (input) {
+        input.addEventListener("input", sortNames);
+      }
     }
-    return match ? match : value;
-});
 
-// sort the input values based on the index of their corresponding channel names in the channels array
-let sortedValues = inputValues.sort((a, b) => {
-let aIndex = channels.indexOf(a);
-let bIndex = channels.indexOf(b);
-if (aIndex === -1) aIndex = Number.MAX_VALUE;
-if (bIndex === -1) bIndex = Number.MAX_VALUE;
-return aIndex - bIndex;
-});
+    function copyToClipboard(button) {
+      var text = button.innerHTML;
+     
+      var tempInput = document.createElement("input");
+      tempInput.style = "position: absolute; left: -1000px; top: -1000px";
+      tempInput.value = text;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      document.execCommand("copy");
+      document.body.removeChild(tempInput);
+    }
 
-// Generate the HTML for the sorted names with checkboxes
-let outputHTML = "";
+    window.onload = function() {
+                var iframe = document.getElementById('resizable-iframe');
+                var handle = document.createElement('div');
+                handle.className = 'resize-handle';
+                iframe.parentNode.insertBefore(handle, iframe.nextSibling);
 
-sortedValues.forEach((value) => {
-let checked = channels.includes(value.toLowerCase()) ? "checked" : "";
-outputHTML += `<input type="checkbox" ${checked}> ${value}<br>`;
-});
+                var isResizing = false;
+                var lastX = 0;
+                var lastY = 0;
 
-document.getElementById("output").innerHTML = outputHTML;
-}
+                handle.addEventListener('mousedown', function(e) {
+                    e.preventDefault();
+                    isResizing = true;
+                    lastX = e.clientX;
+                    lastY = e.clientY;
+                });
 
-// Add event listeners to input fields to update the output div in real-time
-for (let i = 1; i <= 15; i++) {
-let input = document.getElementById("name" + i);
-if (input) {
-input.addEventListener("input", sortNames);
-}
-}
+                document.addEventListener('mousemove', function(e) {
+                    if (!isResizing) return;
 
-function copyToClipboard(button) {
-  var text = button.innerHTML;
- 
-  var tempInput = document.createElement("input");
-  tempInput.style = "position: absolute; left: -1000px; top: -1000px";
-  tempInput.value = text;
-  document.body.appendChild(tempInput);
-  tempInput.select();
-  document.execCommand("copy");
-  document.body.removeChild(tempInput);
-}
+                    var deltaX = e.clientX - lastX;
+                    var deltaY = e.clientY - lastY;
 
-window.onload = function() {
-            var iframe = document.getElementById('resizable-iframe');
-            var handle = document.createElement('div');
-            handle.className = 'resize-handle';
-            iframe.parentNode.insertBefore(handle, iframe.nextSibling);
+                    iframe.style.width = (iframe.offsetWidth + deltaX) + 'px';
+                    iframe.style.height = (iframe.offsetHeight + deltaY) + 'px';
 
-            var isResizing = false;
-            var lastX = 0;
-            var lastY = 0;
+                    lastX = e.clientX;
+                    lastY = e.clientY;
+                });
 
-            handle.addEventListener('mousedown', function(e) {
-                e.preventDefault();
-                isResizing = true;
-                lastX = e.clientX;
-                lastY = e.clientY;
-            });
-
-            document.addEventListener('mousemove', function(e) {
-                if (!isResizing) return;
-
-                var deltaX = e.clientX - lastX;
-                var deltaY = e.clientY - lastY;
-
-                iframe.style.width = (iframe.offsetWidth + deltaX) + 'px';
-                iframe.style.height = (iframe.offsetHeight + deltaY) + 'px';
-
-                lastX = e.clientX;
-                lastY = e.clientY;
-            });
-
-            document.addEventListener('mouseup', function() {
-                isResizing = false;
-            });
-        };
+                document.addEventListener('mouseup', function() {
+                    isResizing = false;
+                });
+            };
 </script>
 </body>
 
