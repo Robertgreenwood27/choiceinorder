@@ -3,9 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Choice In Order - Compact Coyier Edition</title>
-    <style>
-        :root {
+    <title>Choice In Order</title>
+  <style>
+        ::-webkit-scrollbar {
+            width: 0;
+            height: 0;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+:root {
             --primary-color: #6200ea;
             --secondary-color: #03dac6;
             --background-color: #121212;
@@ -77,11 +87,7 @@
         }
 
         #output {
-            background-color: var(--surface-color);
-            border-radius: 8px;
-            padding: 0.5rem;
-            height: 250px;
-            overflow-y: auto;
+            height: auto;
             font-size: 0.9rem;
         }
 
@@ -169,35 +175,34 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Choice In Order</h1>
-        <div class="grid">
-            <div class="card">
-                <h2>Enter Channels</h2>
-                <form id="channelForm">
-                    <!-- Input fields will be dynamically generated here -->
-                </form>
-                <div id="duplicateWarning">Duplicate channel detected!</div>
+    <h1>Choice In Order</h1>
+    <div class="grid">
+        <div class="card">
+            <h2>Enter Channels</h2>
+            <form id="channelForm">
+                <!-- Input fields will be dynamically generated here -->
+            </form>
+            <div id="duplicateWarning">Duplicate channel detected!</div>
+            <div class="toggle-container" style="margin-top: 10px;">
+                <span>CSG</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="toggleCSGAOS">
+                    <span class="slider"></span>
+                </label>
+                <span>AOS</span>
             </div>
-            <div class="card">
-                <h2>Sorted Channels</h2>
-                <div id="output"></div>
-                <div class="toggle-container">
-                    <span>CSG</span>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="toggleCSGAOS">
-                        <span class="slider"></span>
-                    </label>
-                    <span>AOS</span>
-                </div>
-                <button id="copyButton">Copy Sorted List</button>
-            </div>
+            <button id="copyButton" style="margin-top: 10px;">Copy Sorted List</button>
         </div>
-        <div class="card" style="margin-top: 1rem;">
-            <h2>Notes</h2>
-            <textarea id="notes" placeholder="Enter your notes here..."></textarea>
+        <div class="card">
+            <h2>Sorted Channels</h2>
+            <div id="output"></div>
         </div>
     </div>
+    <div class="card" style="margin-top: 1rem;">
+        <h2>Notes</h2>
+        <textarea id="notes" placeholder="Enter your notes here..."></textarea>
+    </div>
+    <div style="color: gray; font-size: 0.8rem; text-align: center;">updated 10/19/2024</div>
 
     <script>
         let currentOrder = 'CSG';
@@ -214,6 +219,7 @@
             "mtv 2": "mtv 2",
             "gameshow": "game show",
             "game show": "game show",
+            "gsn": "game show",
             "wetv": "we tv"
         };
 
