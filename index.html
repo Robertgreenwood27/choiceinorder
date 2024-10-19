@@ -1,474 +1,272 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Choice In Order</title>
-<style>
-body {
-background-color: #424242;
-color: #fff;
-font-family: sans-serif;
-font-size: 20px;
-margin: 0;
-padding: 0;
-display: block;
-justify-content: center;
-align-items: center;
-}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Choice In Order - Compact Coyier Edition</title>
+    <style>
+        :root {
+            --primary-color: #6200ea;
+            --secondary-color: #03dac6;
+            --background-color: #121212;
+            --surface-color: #1e1e1e;
+            --on-surface-color: #ffffff;
+            --error-color: #cf6679;
+        }
 
-h1 {
-font-size: 28px;
-margin: 0;
-padding: 20px;
-text-align: center;
-}
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-#container {
-display: flex;
-justify-content: center;
-margin-top: 50px;
-background-color: #212121;
-margin-left: 10%;
-margin-right: 10%;
-border-radius: 25px;
-}
+        body {
+            background-color: var(--background-color);
+            color: var(--on-surface-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.4;
+            padding: 1rem;
+        }
 
-.column {
-display: flex;
-flex-direction: column;
-}
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
 
-form {
-display: flex;
-flex-direction: column;
-align-items: center;
-margin: 20px;
-width: 80%;
-font-weight: border;
-}
+        h1, h2 {
+            color: var(--secondary-color);
+            margin-bottom: 0.5rem;
+        }
 
-label {
-margin: 10px;
-}
+        h1 {
+            font-size: 1.5rem;
+            text-align: center;
+        }
 
-input[type="text"] {
-border-radius: 5px;
-border: none;
-padding: 10px;
-margin: 10px;
-width: 80%;
-font-weight: bolder;
-}
+        h2 {
+            font-size: 1.2rem;
+        }
 
-input[type="submit"] {
-    background-color: #0277bd; /* corrected color code */
-    border: none;
-    border-radius: 5px;
-    color: #fff;
-    cursor: pointer; /* corrected property name */
-    font-size: 20px; /* corrected property value */
-    padding: 10px;
-    margin: 20px;
-    width: 200px;
-    font-weight: bolder;
-}
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
 
-#output {
-background-color: #424242;
-border-radius: 25px;
-color: #fff;
-margin: 20px;
-padding: 5px;
-width: 300px;
-height: 80%;
-}
+        .card {
+            background-color: var(--surface-color);
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
 
-.row {
-display: flex;
-flex-direction: row;
-justify-content: space-between;
-margin-bottom: 10px;
-}
+        #channelForm {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+        }
 
-.col {
-display: flex;
-flex-direction: column;
-width: 18%;
-}
+        input[type="text"] {
+            width: 100%;
+            padding: 0.3rem;
+            background-color: var(--background-color);
+            border: 1px solid var(--primary-color);
+            color: var(--on-surface-color);
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
 
-#text {
-width: 100%;
-height: 200px;
-margin-left: 22%;
-display: block;
-border-radius: 10px;
-padding: 10px;
-font-weight: bolder;
-}
+        #output {
+            background-color: var(--surface-color);
+            border-radius: 8px;
+            padding: 0.5rem;
+            height: 250px;
+            overflow-y: auto;
+            font-size: 0.9rem;
+        }
 
-#resizable-iframe {
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 0.5rem;
+        }
+
+        .toggle-switch {
+            display: inline-block;
+            height: 28px;
             position: relative;
-            width: 400px;
-            height: 300px;
-            overflow: hidden;
-            border: 1px solid #ccc;
+            width: 50px;
+            margin: 0 0.5rem;
         }
 
-        #resizable-iframe .resize-handle {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            background-color: #666;
-            cursor: nwse-resize;
+        .toggle-switch input {
+            display: none;
+        }
+
+        .slider {
+            background-color: #ccc;
             bottom: 0;
+            cursor: pointer;
+            left: 0;
+            position: absolute;
             right: 0;
+            top: 0;
+            transition: .4s;
+            border-radius: 28px;
         }
 
-#duplicateWarning {
-color: red;
-margin: 10px 0;
-text-align: center;
-display: none;
-}
+        .slider:before {
+            background-color: #fff;
+            bottom: 4px;
+            content: "";
+            height: 20px;
+            left: 4px;
+            position: absolute;
+            transition: .4s;
+            width: 20px;
+            border-radius: 50%;
+        }
 
-#checklist h2 { margin-bottom: 20px; }
+        input:checked + .slider {
+            background-color: var(--primary-color);
+        }
 
-.checklist-item { display: flex; align-items: center; margin-bottom: 10px; }
+        input:checked + .slider:before {
+            transform: translateX(22px);
+        }
 
-.checklist-item input[type="checkbox"] { margin-right: 10px; }
+        textarea {
+            width: 100%;
+            height: 80px;
+            background-color: var(--surface-color);
+            color: var(--on-surface-color);
+            border: 1px solid var(--primary-color);
+            border-radius: 4px;
+            padding: 0.3rem;
+            resize: vertical;
+            font-size: 0.9rem;
+        }
 
-.toggle {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin: 20px;
-}
-
-.toggle input[type="radio"] {
-  display: none;
-}
-
-.toggle label {
-  padding: 10px 20px;
-  background-color: #0277bd;
-  color: white;
-  border-radius: 5px;
-  cursor: pointer;
-  margin: 0 5px;
-}
-
-.toggle input[type="radio"]:checked + label {
-  background-color: #01579b;
-}
-
-.pill-toggle {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin: 10px;
-}
-
-.pill-toggle label {
-  padding: 10px 20px;
-  background-color: #0277bd;
-  color: white;
-  border-radius: 25px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.pill-toggle input[type="checkbox"]:checked + label {
-  background-color: #01579b;
-}
-
-.pill-toggle label:hover {
-  background-color: #0288d1;
-}
-
-.switch-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin: 20px;
-}
-
-.switch {
-  position: relative;
-  display: inline-block;
-  width: 60px;
-  height: 34px;
-}
-
-.switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #ccc;
-  transition: .4s;
-  border-radius: 34px;
-}
-
-.slider:before {
-  position: absolute;
-  content: "";
-  height: 26px;
-  width: 26px;
-  left: 4px;
-  bottom: 4px;
-  background-color: white;
-  transition: .4s;
-  border-radius: 50%;
-}
-
-input:checked + .slider {
-  background-color: #2196F3;
-}
-
-input:checked + .slider:before {
-  transform: translateX(26px);
-}
-
-.switch-labels {
-  display: flex;
-  justify-content: space-between;
-  width: 100px;
-  margin-top: 10px;
-  color: #fff;
-}
-</style>
+        #duplicateWarning {
+            color: var(--error-color);
+            margin-top: 0.5rem;
+            display: none;
+            font-size: 0.8rem;
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
-<h1>Choice In Order</h1>
-<div id="container">
-  <div class="column">
-    <h2>Enter Channels</h2>
-    <div id="duplicateWarning">Duplicate channel detected!</div>
-    <form>
-      <div class="row">
-        <div class="col">
-          <label for="name1">1:</label>
-          <input type="text" id="name1" name="name1" />
+    <div class="container">
+        <h1>Choice In Order</h1>
+        <div class="grid">
+            <div class="card">
+                <h2>Enter Channels</h2>
+                <form id="channelForm">
+                    <!-- Input fields will be dynamically generated here -->
+                </form>
+                <div id="duplicateWarning">Duplicate channel detected!</div>
+            </div>
+            <div class="card">
+                <h2>Sorted Channels</h2>
+                <div id="output"></div>
+                <div class="toggle-container">
+                    <span>CSG</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="toggleCSGAOS">
+                        <span class="slider"></span>
+                    </label>
+                    <span>AOS</span>
+                </div>
+            </div>
         </div>
-        <div class="col">
-          <label for="name2">2:</label>
-          <input type="text" id="name2" name="name2" />
+        <div class="card" style="margin-top: 1rem;">
+            <h2>Notes</h2>
+            <textarea id="notes" placeholder="Enter your notes here..."></textarea>
         </div>
-        <div class="col">
-          <label for="name3">3:</label>
-          <input type="text" id="name3" name="name3" />
-        </div>
-        <div class="col">
-          <label for="name4">4:</label>
-          <input type="text" id="name4" name="name4" />
-        </div>
-        <div class="col">
-          <label for="name5">5:</label>
-          <input type="text" id="name5" name="name5" />
-        </div>
-      </div>
-      <div class="row">
-        <div class="col">
-          <label for="name6">6:</label>
-          <input type="text" id="name6" name="name6" />
-        </div>
-        <div class="col">
-          <label for="name7">7:</label>
-          <input type="text" id="name7" name="name7" />
-        </div>
-        <div class="col">
-          <label for="name8">8:</label>
-          <input type="text" id="name8" name="name8" />
-        </div>
-        <div class="col">
-          <label for="name9">9:</label>
-          <input type="text" id="name9" name="name9" />
-        </div>
-        <div class="col">
-          <label for="name10">10:</label>
-          <input type="text" id="name10" name="name10" />
-        </div>
-      </div>
-      <div class="row">
-        <div class="col">
-          <label for="name11">11:</label>
-          <input type="text" id="name11" name="name11" />
-        </div>
-        <div class="col">
-          <label for="name12">12:</label>
-          <input type="text" id="name12" name="name12" />
-        </div>
-        <div class="col">
-          <label for="name13">13:</label>
-          <input type="text" id="name13" name="name13" />
-        </div>
-        <div class="col">
-          <label for="name14">14:</label>
-          <input type="text" id="name14" name="name14" />
-        </div>
-        <div class="col">
-          <label for="name15">15:</label>
-          <input type="text" id="name15" name="name15" />
-        </div>
-      </div>
-    </form>
-  </div>
-  <div class="column">
-    <h2>Sorted Channels</h2>
-    
-    <div id="output"></div>
-    
-    <div class="switch-container">
-      <label class="switch">
-        <input type="checkbox" id="toggleCSGAOS" onchange="toggleChannelOrder()">
-        <span class="slider"></span>
-      </label>
-      <div class="switch-labels">
-        <span>CSG</span>
-        <span>AOS</span>
-      </div>
     </div>
-  </div>
-</div>
-<form>
-  <textarea class="notepad" id="text" name="article" rows="10" cols="50" placeholder="notes"></textarea>
-  <br />
-  <br />
-  <span>Updated 10/18/2024</span>
-</form>
 
-  
-  
-  
-</div>
+    <script>
+        let currentOrder = 'CSG';
+        const channelsCSG = ["animal planet", "cartoon network", "disney", "nickelodeon", "discovery", "history", "tlc", "tv land", "we tv", "wetv", "a&e", "aspire", "bravo", "food network", "hgtv", "id", "impact", "nat geo", "national geographic", "syfy", "travel channel", "cmt", "gameshow", "game show", "gsn", "mtv2", "mtv 2", "amc", "bet", "cleo", "comedy central", "e!", "fx", "hallmark", "hallmark movies", "lifetime", "lmn", "mtv", "own", "oxygen", "paramount", "pop", "revolt", "smithsonian", "tbs", "tcm", "tnt", "tru tv", "tv one", "usa", "vh1", "bbc america", "bbc world news", "thegrio", "black news channel", "cnbc", "cnn", "fox business", "fox news", "hln", "msnbc", "weather channel", "cbs sports", "espn", "espn2", "espn 2", "fox sports 1",  "fs1", "fs 1", "fox sports 2", "fs2", "fs 2", "balley sports", "golf", "spectrum sports net", "nfl", "bein en espanol", "bein sports", "cnn en espanol", "discovery en espanol", "espn deportes", "fox deportes", "galavision", "univision deportes", "wapa america"];
+        const channelsAOS = ["animal planet", "cartoon network", "disney", "nickelodeon", "discovery", "history", "tlc", "tv land", "a&e", "aspire", "bravo", "food network", "hgtv", "id", "impact", "nat geo", "national geographic", "syfy", "travel channel", "we tv", "wetv", "amc", "bet", "cmt", "cleo", "comedy central", "e!", "fx", "game show", "gameshow", "gsn", "hallmark", "hallmark movies", "lifetime", "lmn", "mtv", "mtv 2", "mtv2", "own", "oxygen", "pop", "revolt", "smithsonian", "paramount", "tbs", "tcm", "tnt", "tv one", "tru tv", "usa", "vh1", "bbc america", "bbc world news", "thegrio", "cnbc", "cnn", "fox business", "fox news", "hln", "msnbc", "weather channel", "cbs sports", "espn", "espn2", "espn 2", "fox sports 1", "fs1", "fs 1", "fox sports 2", "fs2", "fs 2", "golf", "nfl", "bein en espanol", "bein sports", "cnn en espanol", "discovery en espanol", "espn deportes", "fox deportes", "galavision", "univision deportes", "wapa america", "balley sports", "spectrum sports net"];
 
-<script>
-    let currentOrder = 'CSG';
-    const channelsCSG = ["animal planet", "cartoon network", "disney", "nickelodeon", "discovery", "history", "tlc", "tv land", "we tv", "wetv", "a&e", "aspire", "bravo", "food network", "hgtv", "id", "impact", "nat geo", "national geographic", "syfy", "travel channel", "cmt", "gameshow", "game show", "gsn", "mtv2", "mtv 2", "amc", "bet", "cleo", "comedy central", "e!", "fx", "hallmark", "hallmark movies", "lifetime", "lmn", "mtv", "own", "oxygen", "paramount", "pop", "revolt", "smithsonian", "tbs", "tcm", "tnt", "tru tv", "tv one", "usa", "vh1", "bbc america", "bbc world news", "thegrio", "black news network", "cnbc", "cnn", "fox business", "fox news", "hln", "msnbc", "weather channel", "cbs sports", "espn", "espn2", "espn 2", "fox sports 1",  "fs1", "fs 1", "fox sports 2", "fs2", "fs 2", "balley sports", "golf", "spectrum sports net", "nfl", "bein en espanol", "bein sports", "cnn en espanol", "discovery en espanol", "espn deportes", "fox deportes", "galavision", "univision deportes", "wapa america"];
-    const channelsAOS = [
-  "animal planet", "cartoon network", "disney", "nickelodeon", "discovery", "history", "tlc", "tv land", "a&e", "aspire", "bravo", "food network", "hgtv", "id", "impact", "nat geo", "national geographic", "syfy", "travel channel", "we tv", "wetv", "amc", "bet", "cmt", "cleo", "comedy central", "e!", "fx", "game show", "gameshow", "gsn", "hallmark", "hallmark movies", "lifetime", "lmn", "mtv", "mtv 2", "mtv2", "own", "oxygen", "pop", "revolt", "smithsonian", "paramount", "tbs", "tcm", "tnt", "tv one", "tru tv", "usa", "vh1", "bbc america", "bbc world news", "thegrio", "cnbc", "cnn", "fox business", "fox news", "hln", "msnbc", "weather channel", "cbs sports", "espn", "espn2", "espn 2", "fox sports 1", "fs1", "fs 1", "fox sports 2", "fs2", "fs 2", "golf", "nfl", "bein en espanol", "bein sports", "cnn en espanol", "discovery en espanol", "espn deportes", "fox deportes", "galavision", "univision deportes", "wapa america", "balley sports", "spectrum sports net"];
+        const corrections = {
+            "fs1": "fox sports 1",
+            "fox sports 1": "fox sports 1",
+            "fs 1": "fox sports 1",
+            "espn2": "espn 2",
+            "espn 2": "espn 2",
+            "mtv2": "mtv 2",
+            "mtv 2": "mtv 2",
+            "gameshow": "game show",
+            "game show": "game show",
+            "wetv": "we tv"
+        };
 
-    function toggleChannelOrder() {
-      currentOrder = document.getElementById("toggleCSGAOS").checked ? 'AOS' : 'CSG';
-      sortNames();
-    }
-
-    function sortNames() {
-      // Select the correct channel order based on the toggle
-      const channels = currentOrder === 'CSG' ? channelsCSG : channelsAOS;
-
-      // Get the input values and store them in an array
-      let inputValues = [];
-      for (let i = 1; i <= 15; i++) {
-        let input = document.getElementById("name" + i);
-        if (input && input.value) {
-          inputValues.push(input.value.toLowerCase()); // convert to lowercase to match channel names
+        function toggleChannelOrder() {
+            currentOrder = document.getElementById("toggleCSGAOS").checked ? 'AOS' : 'CSG';
+            sortNames();
         }
-      }
 
-      //If an input value is a partial match, replace it with the corresponding full channel name
-      inputValues = inputValues.map((value) => {
-        let regex = new RegExp("^" + value, "i");
-        let match = channels.find((channel) => regex.test(channel));
-        if (match && match.toLowerCase() === "mtv2" && value.toLowerCase() === "mtv") {
-            return "mtv";
+        function sortNames() {
+            const channels = currentOrder === 'CSG' ? channelsCSG : channelsAOS;
+
+            let inputValues = [];
+            for (let i = 1; i <= 15; i++) {
+                let input = document.getElementById("name" + i);
+                if (input && input.value) {
+                    inputValues.push(input.value.toLowerCase());
+                }
+            }
+
+            inputValues = inputValues.map((value) => {
+                if (corrections[value]) {
+                    return corrections[value];
+                }
+                let regex = new RegExp("^" + value, "i");
+                let match = channels.find((channel) => regex.test(channel));
+                return match ? match : value;
+            });
+
+            let sortedValues = inputValues.sort((a, b) => {
+                let aIndex = channels.indexOf(a);
+                let bIndex = channels.indexOf(b);
+                if (aIndex === -1) aIndex = Number.MAX_VALUE;
+                if (bIndex === -1) bIndex = Number.MAX_VALUE;
+                return aIndex - bIndex;
+            });
+
+            let hasDuplicates = new Set(sortedValues).size !== sortedValues.length;
+            document.getElementById("duplicateWarning").style.display = hasDuplicates ? "block" : "none";
+
+            let outputHTML = "";
+            sortedValues.forEach((value) => {
+                let checked = channels.includes(value.toLowerCase()) ? "checked" : "";
+                outputHTML += `<label><input type="checkbox" ${checked}> ${value}</label><br>`;
+            });
+
+            document.getElementById("output").innerHTML = outputHTML;
         }
-        return match ? match : value;
-      });
 
-      // sort the input values based on the index of their corresponding channel names in the channels array
-      let sortedValues = inputValues.sort((a, b) => {
-        let aIndex = channels.indexOf(a);
-        let bIndex = channels.indexOf(b);
-        if (aIndex === -1) aIndex = Number.MAX_VALUE;
-        if (bIndex === -1) bIndex = Number.MAX_VALUE;
-        return aIndex - bIndex;
-      });
+        function generateInputs() {
+            const form = document.getElementById('channelForm');
+            for (let i = 1; i <= 15; i++) {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.id = `name${i}`;
+                input.name = `name${i}`;
+                input.placeholder = `Channel ${i}`;
+                input.addEventListener('input', sortNames);
+                form.appendChild(input);
+            }
+        }
 
-      // check for duplicates in the sorted list
-      let hasDuplicates = new Set(sortedValues).size !== sortedValues.length;
-      if (hasDuplicates) {
-        document.getElementById("duplicateWarning").style.display = "block";
-      } else {
-        document.getElementById("duplicateWarning").style.display = "none";
-      }
-
-      // Generate the HTML for the sorted names with checkboxes
-      let outputHTML = "";
-
-      sortedValues.forEach((value) => {
-        let checked = channels.includes(value.toLowerCase()) ? "checked" : "";
-        let color = channels.includes(value.toLowerCase()) ? "style='background-color: #0277bd;'" : "";
-        outputHTML += `<input type="checkbox" ${checked} ${color}> ${value}<br>`;
-      });
-
-      document.getElementById("output").innerHTML = outputHTML;
-    }
-
-    // Add event listeners to input fields to update the output div in real-time
-    for (let i = 1; i <= 15; i++) {
-      let input = document.getElementById("name" + i);
-      if (input) {
-        input.addEventListener("input", sortNames);
-      }
-    }
-
-    function copyToClipboard(button) {
-      var text = button.innerHTML;
-     
-      var tempInput = document.createElement("input");
-      tempInput.style = "position: absolute; left: -1000px; top: -1000px";
-      tempInput.value = text;
-      document.body.appendChild(tempInput);
-      tempInput.select();
-      document.execCommand("copy");
-      document.body.removeChild(tempInput);
-    }
-
-    window.onload = function() {
-                var iframe = document.getElementById('resizable-iframe');
-                var handle = document.createElement('div');
-                handle.className = 'resize-handle';
-                iframe.parentNode.insertBefore(handle, iframe.nextSibling);
-
-                var isResizing = false;
-                var lastX = 0;
-                var lastY = 0;
-
-                handle.addEventListener('mousedown', function(e) {
-                    e.preventDefault();
-                    isResizing = true;
-                    lastX = e.clientX;
-                    lastY = e.clientY;
-                });
-
-                document.addEventListener('mousemove', function(e) {
-                    if (!isResizing) return;
-
-                    var deltaX = e.clientX - lastX;
-                    var deltaY = e.clientY - lastY;
-
-                    iframe.style.width = (iframe.offsetWidth + deltaX) + 'px';
-                    iframe.style.height = (iframe.offsetHeight + deltaY) + 'px';
-
-                    lastX = e.clientX;
-                    lastY = e.clientY;
-                });
-
-                document.addEventListener('mouseup', function() {
-                    isResizing = false;
-                });
-            };
-</script>
+        document.addEventListener('DOMContentLoaded', () => {
+            generateInputs();
+            document.getElementById('toggleCSGAOS').addEventListener('change', toggleChannelOrder);
+        });
+    </script>
 </body>
-
 </html>
