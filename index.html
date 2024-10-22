@@ -162,6 +162,13 @@
             text-align: center;
         }
 
+        #channelsLeft {
+            margin-top: 0.5rem;
+            color: var(--secondary-color);
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
         #copyButton {
             margin-top: 1rem;
             padding: 0.5rem 1rem;
@@ -183,6 +190,7 @@
                 <!-- Input fields will be dynamically generated here -->
             </form>
             <div id="duplicateWarning">Duplicate channel detected!</div>
+            <div id="channelsLeft">15 channels left</div>
             <div class="toggle-container" style="margin-top: 10px;">
                 <span>CSG</span>
                 <label class="toggle-switch">
@@ -266,6 +274,11 @@
             });
 
             document.getElementById("output").innerHTML = outputHTML;
+            updateChannelsLeft(Math.max(0, 15 - inputValues.length));
+        }
+
+        function updateChannelsLeft(channelsLeft) {
+            document.getElementById("channelsLeft").textContent = `${channelsLeft} channels left`;
         }
 
         function generateInputs() {
