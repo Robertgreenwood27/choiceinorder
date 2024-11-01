@@ -180,6 +180,63 @@
             font-size: 1rem;
         }
     </style>
+    <style>
+        .address-splitter {
+            margin: 1rem 0;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        .address-input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            color: #fff;
+        }
+
+        .address-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .address-parts {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .address-part {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .copy-btn {
+            padding: 4px 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            color: #fff;
+            transition: background-color 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .part-label {
+            padding: 4px 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            flex-grow: 1;
+            color: #fff;
+        }
+    </style>
 </head>
 <body>
     <h1>Choice In Order</h1>
@@ -211,6 +268,116 @@
         <textarea id="notes" placeholder="Enter your notes here..."></textarea>
     </div>
     <div style="color: gray; font-size: 0.8rem; text-align: center;">updated 10/19/2024</div>
+
+
+
+
+
+
+
+
+    <div class="card">
+        <h2>Address Splitter</h2>
+        <div class="address-splitter">
+            <input type="text" 
+                   class="address-input" 
+                   placeholder="Enter address (e.g. 109 8th StFowler, CO 81039)"
+                   id="addressInput">
+            <div class="address-parts" id="addressParts"></div>
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+    function initAddressSplitter() {
+    const addressInput = document.getElementById('addressInput');
+    const addressParts = document.getElementById('addressParts');
+
+    const streetSuffixes = [
+        'Aly', 'Ave', 'Bnd', 'Blvd', 'Br', 'Byp',
+        'Cir', 'Ct', 'Cres', 'Dr', 'Expy', 'Ext',
+        'Fwy', 'Gdn', 'Hwy', 'Holw', 'Jct', 'Ln',
+        'Loop', 'Mall', 'Pkwy', 'Pass', 'Path', 'Pike',
+        'Pl', 'Plz', 'Pt', 'Rd', 'Rte', 'Row',
+        'Run', 'Sq', 'St', 'Ter', 'Trl', 'Way'
+    ];
+
+    function splitAddress(address) {
+        // Extract street number
+        const numberMatch = address.match(/^\d+/);
+        const streetNumber = numberMatch ? numberMatch[0] : '';
+        
+        // Extract ZIP code
+        const zipMatch = address.match(/\d{5}$/);
+        const zipCode = zipMatch ? zipMatch[0] : '';
+        
+        // Get remaining text
+        let remainingText = address
+            .replace(numberMatch ? numberMatch[0] : '', '') // Remove street number
+            .replace(zipMatch ? zipMatch[0] : '', '')       // Remove ZIP
+            .trim();
+
+        // Create regex pattern for all suffixes with positive lookahead
+        const suffixPattern = streetSuffixes.join('|');
+        const regex = new RegExp(`^.*?\\b(${suffixPattern})(?=\\s|$|,|[A-Z])`, 'i');
+        
+        const streetMatch = remainingText.match(regex);
+        const streetName = streetMatch ? streetMatch[0].trim() : remainingText;
+
+        return [
+            { label: 'Street Number', value: streetNumber },
+            { label: 'Street Name', value: streetName },
+            { label: 'ZIP Code', value: zipCode }
+        ];
+    }
+
+    function createPart(label, value) {
+        const div = document.createElement('div');
+        div.className = 'address-part';
+        
+        const labelSpan = document.createElement('span');
+        labelSpan.className = 'part-label';
+        labelSpan.textContent = value;
+        
+        const copyButton = document.createElement('button');
+        copyButton.className = 'copy-btn';
+        copyButton.textContent = 'Copy';
+        copyButton.onclick = () => {
+            navigator.clipboard.writeText(value);
+            copyButton.textContent = 'Copied!';
+            setTimeout(() => {
+                copyButton.textContent = 'Copy';
+            }, 1000);
+        };
+
+        div.appendChild(labelSpan);
+        div.appendChild(copyButton);
+        return div;
+    }
+
+    addressInput.addEventListener('input', (e) => {
+        const address = e.target.value;
+        addressParts.innerHTML = '';
+        
+        if (address.trim()) {
+            const parts = splitAddress(address);
+            parts.forEach(part => {
+                if (part.value) {
+                    addressParts.appendChild(createPart(part.label, part.value));
+                }
+            });
+        }
+    });
+}
+
+// Initialize the address splitter
+document.addEventListener('DOMContentLoaded', initAddressSplitter);
+
+</script>
+
+
 
     <script>
         let currentOrder = 'CSG';
