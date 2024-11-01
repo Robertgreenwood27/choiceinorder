@@ -415,10 +415,21 @@ document.addEventListener('DOMContentLoaded', initAddressSplitter);
             }
 
             inputValues = inputValues.map((value) => {
-                if (corrections[value]) {
-                    return corrections[value];
+                let lowerValue = value.toLowerCase();
+
+                // Apply correction if it exists
+                if (corrections[lowerValue]) {
+                    lowerValue = corrections[lowerValue].toLowerCase();
                 }
-                let regex = new RegExp("^" + value, "i");
+
+                // Check for exact match
+                let exactMatch = channels.find((channel) => channel.toLowerCase() === lowerValue);
+                if (exactMatch) {
+                    return exactMatch;
+                }
+
+                // Try to find a channel that starts with the value
+                let regex = new RegExp("^" + lowerValue, "i");
                 let match = channels.find((channel) => regex.test(channel));
                 return match ? match : value;
             });
@@ -477,6 +488,7 @@ document.addEventListener('DOMContentLoaded', initAddressSplitter);
             document.getElementById('toggleCSGAOS').addEventListener('change', toggleChannelOrder);
             document.getElementById('copyButton').addEventListener('click', copyToClipboard);
         });
+
     </script>
 </body>
 </html>
