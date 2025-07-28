@@ -3,25 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Choice In Order</title>
-  <style>
-        ::-webkit-scrollbar {
-            width: 0;
-            height: 0;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: transparent;
-        }
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-:root {
+    <title>Channel Manager Pro</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap">
+    <style>
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-thumb { background: var(--accent-color); border-radius: 4px; }
+        ::-webkit-scrollbar-track { background: var(--surface-color); }
+
+        :root {
             --primary-color: #6200ea;
             --secondary-color: #03dac6;
             --background-color: #121212;
             --surface-color: #1e1e1e;
             --on-surface-color: #ffffff;
             --error-color: #cf6679;
+            --accent-color: #bb86fc;
+            --shadow-color: rgba(0, 0, 0, 0.5);
+            --success-color: #4CAF50;
+            --warning-color: #FFA500;
+            --hover-color: #3700b3;
+            --disabled-color: #424242;
         }
 
         * {
@@ -33,357 +34,426 @@
         body {
             background-color: var(--background-color);
             color: var(--on-surface-color);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.4;
-            padding: 1rem;
+            font-family: 'Roboto', sans-serif;
+            line-height: 1.6;
+            padding: 2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
         }
 
         .container {
             max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        h1, h2 {
-            color: var(--secondary-color);
-            margin-bottom: 0.5rem;
+            width: 100%;
+            background: var(--surface-color);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px var(--shadow-color);
         }
 
         h1 {
-            font-size: 1.5rem;
+            font-size: 2.5rem;
             text-align: center;
+            color: var(--secondary-color);
+            margin-bottom: 2rem;
+            text-shadow: 0 2px 4px var(--shadow-color);
         }
 
         h2 {
-            font-size: 1.2rem;
+            font-size: 1.6rem;
+            color: var(--accent-color);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
+        .section {
+            margin-bottom: 2.5rem;
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            box-shadow: 0 4px 16px var(--shadow-color);
+            transition: box-shadow 0.3s ease;
         }
 
-        .card {
-            background-color: var(--surface-color);
-            border-radius: 8px;
-            padding: 1rem;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        .section:hover {
+            box-shadow: 0 6px 24px var(--shadow-color);
         }
 
         #channelForm {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 0.5rem;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 1rem;
         }
 
-        input[type="text"] {
+        input[type="text"], input[type="number"], textarea {
             width: 100%;
-            padding: 0.3rem;
-            background-color: var(--background-color);
+            padding: 0.75rem;
+            background-color: rgba(255, 255, 255, 0.1);
             border: 1px solid var(--primary-color);
             color: var(--on-surface-color);
-            border-radius: 4px;
-            font-size: 0.9rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s, box-shadow 0.3s, transform 0.2s;
         }
 
-        #output {
-            height: auto;
-            font-size: 0.9rem;
-        }
-
-        .toggle-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-top: 0.5rem;
-        }
-
-        .toggle-switch {
-            display: inline-block;
-            height: 28px;
-            position: relative;
-            width: 50px;
-            margin: 0 0.5rem;
-        }
-
-        .toggle-switch input {
-            display: none;
-        }
-
-        .slider {
-            background-color: #ccc;
-            bottom: 0;
-            cursor: pointer;
-            left: 0;
-            position: absolute;
-            right: 0;
-            top: 0;
-            transition: .4s;
-            border-radius: 28px;
-        }
-
-        .slider:before {
-            background-color: #fff;
-            bottom: 4px;
-            content: "";
-            height: 20px;
-            left: 4px;
-            position: absolute;
-            transition: .4s;
-            width: 20px;
-            border-radius: 50%;
-        }
-
-        input:checked + .slider {
-            background-color: var(--primary-color);
-        }
-
-        input:checked + .slider:before {
-            transform: translateX(22px);
+        input[type="text"]:focus, input[type="number"]:focus, textarea:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 8px rgba(3, 218, 198, 0.5);
+            transform: translateY(-1px);
         }
 
         textarea {
-            width: 100%;
-            height: 80px;
-            background-color: var(--surface-color);
-            color: var(--on-surface-color);
-            border: 1px solid var(--primary-color);
-            border-radius: 4px;
-            padding: 0.3rem;
+            height: 140px;
             resize: vertical;
-            font-size: 0.9rem;
+        }
+
+        #output {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            font-size: 1rem;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
         }
 
         #duplicateWarning {
             color: var(--error-color);
             margin-top: 0.5rem;
             display: none;
-            font-size: 0.8rem;
+            font-size: 0.9rem;
             text-align: center;
+            animation: fadeIn 0.3s ease;
         }
 
         #channelsLeft {
             margin-top: 0.5rem;
             color: var(--secondary-color);
-            font-size: 0.9rem;
+            font-size: 1rem;
             text-align: center;
         }
 
-        #copyButton {
-            margin-top: 1rem;
-            padding: 0.5rem 1rem;
+        button {
+            padding: 0.75rem 1.5rem;
             background-color: var(--primary-color);
             color: var(--on-surface-color);
             border: none;
-            border-radius: 4px;
+            border-radius: 8px;
             cursor: pointer;
             font-size: 1rem;
+            transition: background-color 0.3s, transform 0.2s, box-shadow 0.3s;
+            margin-top: 1rem;
         }
-    </style>
-    <style>
+
+        button:hover:enabled {
+            background-color: var(--hover-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(55, 0, 179, 0.5);
+        }
+
+        button:disabled {
+            background-color: var(--disabled-color);
+            cursor: not-allowed;
+        }
+
         .address-splitter {
-            margin: 1rem 0;
-            padding: 1rem;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 4px;
+            margin-top: 1rem;
         }
 
         .address-input {
-            width: 100%;
-            padding: 8px;
             margin-bottom: 1rem;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 4px;
-            color: #fff;
-        }
-
-        .address-input::placeholder {
-            color: rgba(255, 255, 255, 0.5);
         }
 
         .address-parts {
             display: flex;
             flex-direction: column;
-            gap: 0.5rem;
+            gap: 0.75rem;
         }
 
         .address-part {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0.75rem;
+            border-radius: 8px;
+            transition: background 0.3s;
         }
 
-        .copy-btn {
-            padding: 4px 8px;
+        .address-part:hover {
             background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.8rem;
-            color: #fff;
-            transition: background-color 0.2s;
-        }
-
-        .copy-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
         }
 
         .part-label {
-            padding: 4px 8px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 4px;
             flex-grow: 1;
-            color: #fff;
+            color: var(--on-surface-color);
+        }
+
+        .copy-btn {
+            padding: 0.5rem 1rem;
+            background: var(--accent-color);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            color: var(--background-color);
+            font-size: 0.9rem;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: #9146ff;
+            transform: translateY(-1px);
+        }
+
+        #trackerForm {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+        }
+
+        #trackerForm label {
+            font-size: 1rem;
+            color: var(--accent-color);
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        #result {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        #result p {
+            margin: 0.5rem 0;
+        }
+
+        .success {
+            color: var(--success-color);
+            font-weight: 500;
+        }
+
+        .warning {
+            color: var(--warning-color);
+            font-weight: 500;
+        }
+
+        .error {
+            color: var(--error-color);
+            font-weight: 500;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 2rem;
+            font-size: 0.9rem;
+            color: var(--accent-color);
+            opacity: 0.8;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Drawer styles */
+        .drawer-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+
+        .drawer-button {
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 500;
+            background-color: var(--primary-color);
+            color: var(--on-surface-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s, box-shadow 0.3s;
+        }
+
+        .drawer-button:hover {
+            background-color: var(--hover-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(55, 0, 179, 0.5);
+        }
+
+        .drawer-button.active {
+            background-color: var(--secondary-color);
+            transform: translateY(0);
+        }
+
+        .drawer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out;
+        }
+
+        .drawer.open {
+            max-height: 1000px; /* Adjust as needed for content */
+        }
+
+        /* Accessibility improvements */
+        input, textarea, button {
+            font-family: inherit;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+            .container {
+                padding: 1.5rem;
+            }
+            h1 {
+                font-size: 2rem;
+            }
+            h2 {
+                font-size: 1.4rem;
+            }
+            #channelForm {
+                grid-template-columns: 1fr;
+            }
+            #trackerForm {
+                grid-template-columns: 1fr;
+            }
+            .drawer-buttons {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .drawer-button {
+                width: 100%;
+            }
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-group {
+            display: flex;
+            align-items: center;
+        }
+
+        .input-group input {
+            flex: 1;
+            margin: 0 0.5rem;
+        }
+
+        .inc-btn, .dec-btn {
+            width: 40px;
+            height: 40px;
+            font-size: 1.5rem;
+            background: var(--accent-color);
+            color: var(--background-color);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s, transform 0.2s, box-shadow 0.3s;
+        }
+
+        .inc-btn:hover, .dec-btn:hover {
+            background: #9146ff;
+            transform: scale(1.1);
+            box-shadow: 0 2px 8px rgba(187, 134, 252, 0.5);
         }
     </style>
 </head>
 <body>
-    <h1>Choice In Order</h1>
-    <div class="grid">
-        <div class="card">
-            <h2>Enter Channels</h2>
-            <form id="channelForm">
-                <!-- Input fields will be dynamically generated here -->
-            </form>
-            <div id="duplicateWarning">Duplicate channel detected!</div>
-            <div id="channelsLeft">15 channels left</div>
-            <div class="toggle-container" style="margin-top: 10px;">
-                <span>CSG</span>
-                <label class="toggle-switch">
-                    <input type="checkbox" id="toggleCSGAOS">
-                    <span class="slider"></span>
-                </label>
-                <span>AOS</span>
+    <div class="container">
+        <h1>Channel Manager Pro</h1>
+        
+        <div class="drawer-buttons">
+            <button class="drawer-button" data-drawer="channelSorter">Channel Sorter</button>
+            <button class="drawer-button" data-drawer="addressSplitter">Address Splitter</button>
+            <button class="drawer-button" data-drawer="transferTracker">Transfer Prevention Tracker</button>
+        </div>
+
+        <div class="drawer" id="channelSorter">
+            <div class="section">
+                <h2>Channel Sorter</h2>
+                <form id="channelForm" aria-labelledby="channel-sorter-title"></form>
+                <div id="duplicateWarning" role="alert">Duplicate channel detected!</div>
+                <div id="channelsLeft">15 channels left</div>
+                <button id="copyButton" disabled>Copy Sorted List</button>
+                <div id="output" aria-live="polite"></div>
+                <h2>Notes</h2>
+                <textarea id="notes" placeholder="Enter your notes here..." aria-label="Notes"></textarea>
             </div>
-            <button id="copyButton" style="margin-top: 10px;">Copy Sorted List</button>
         </div>
-        <div class="card">
-            <h2>Sorted Channels</h2>
-            <div id="output"></div>
+
+        <div class="drawer" id="addressSplitter">
+            <div class="section address-splitter">
+                <h2>Address Splitter</h2>
+                <input type="text" id="addressInput" class="address-input" placeholder="Enter full address (e.g., 123 Main St 90210)" aria-label="Full Address">
+                <div id="addressParts" class="address-parts" aria-live="polite"></div>
+            </div>
         </div>
-    </div>
-    <div class="card" style="margin-top: 1rem;">
-        <h2>Notes</h2>
-        <textarea id="notes" placeholder="Enter your notes here..."></textarea>
-    </div>
-    <div style="color: gray; font-size: 0.8rem; text-align: center;">updated 10/19/2024</div>
 
-
-
-
-
-
-
-
-    <div class="card">
-        <h2>Address Splitter</h2>
-        <div class="address-splitter">
-            <input type="text" 
-                   class="address-input" 
-                   placeholder="Enter address (e.g. 109 8th StFowler, CO 81039)"
-                   id="addressInput">
-            <div class="address-parts" id="addressParts"></div>
+        <div class="drawer" id="transferTracker">
+            <div class="section">
+                <h2>Transfer Prevention Tracker</h2>
+                <form id="trackerForm" aria-labelledby="tracker-title">
+                    <div class="form-group">
+                        <label for="totalCalls">Total Calls Taken:</label>
+                        <div class="input-group">
+                            <button class="dec-btn" data-input="totalCalls">-</button>
+                            <input type="number" id="totalCalls" min="0" step="1" required aria-required="true">
+                            <button class="inc-btn" data-input="totalCalls">+</button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="transferred">Number of Transfers:</label>
+                        <div class="input-group">
+                            <button class="dec-btn" data-input="transferred">-</button>
+                            <input type="number" id="transferred" min="0" step="1" required aria-required="true">
+                            <button class="inc-btn" data-input="transferred">+</button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="goal">Goal Percentage:</label>
+                        <div class="input-group">
+                            <button class="dec-btn" data-input="goal">-</button>
+                            <input type="number" id="goal" min="0" max="100" step="0.01" value="75" required aria-required="true">
+                            <button class="inc-btn" data-input="goal">+</button>
+                        </div>
+                    </div>
+                    
+                    <button type="submit">Calculate</button>
+                </form>
+                
+                <div id="result" role="region" aria-live="polite">
+                    <p id="percentage"></p>
+                    <p id="additionalInfo"></p>
+                </div>
+            </div>
         </div>
+        
+        <div class="footer">Updated 07/27/2025</div>
     </div>
-</div>
-
-
-
-<script>
-    function initAddressSplitter() {
-    const addressInput = document.getElementById('addressInput');
-    const addressParts = document.getElementById('addressParts');
-
-    const streetSuffixes = [
-        'Aly', 'Ave', 'Bnd', 'Blvd', 'Br', 'Byp',
-        'Cir', 'Ct', 'Cres', 'Dr', 'Expy', 'Ext',
-        'Fwy', 'Gdn', 'Hwy', 'Holw', 'Jct', 'Ln',
-        'Loop', 'Mall', 'Pkwy', 'Pass', 'Path', 'Pike',
-        'Pl', 'Plz', 'Pt', 'Rd', 'Rte', 'Row',
-        'Run', 'Sq', 'St', 'Ter', 'Trl', 'Way'
-    ];
-
-    function splitAddress(address) {
-        // Extract street number
-        const numberMatch = address.match(/^\d+/);
-        const streetNumber = numberMatch ? numberMatch[0] : '';
-        
-        // Extract ZIP code
-        const zipMatch = address.match(/\d{5}$/);
-        const zipCode = zipMatch ? zipMatch[0] : '';
-        
-        // Get remaining text
-        let remainingText = address
-            .replace(numberMatch ? numberMatch[0] : '', '') // Remove street number
-            .replace(zipMatch ? zipMatch[0] : '', '')       // Remove ZIP
-            .trim();
-
-        // Create regex pattern for all suffixes with positive lookahead
-        const suffixPattern = streetSuffixes.join('|');
-        const regex = new RegExp(`^.*?\\b(${suffixPattern})(?=\\s|$|,|[A-Z])`, 'i');
-        
-        const streetMatch = remainingText.match(regex);
-        const streetName = streetMatch ? streetMatch[0].trim() : remainingText;
-
-        return [
-            { label: 'Street Number', value: streetNumber },
-            { label: 'Street Name', value: streetName },
-            { label: 'ZIP Code', value: zipCode }
-        ];
-    }
-
-    function createPart(label, value) {
-        const div = document.createElement('div');
-        div.className = 'address-part';
-        
-        const labelSpan = document.createElement('span');
-        labelSpan.className = 'part-label';
-        labelSpan.textContent = value;
-        
-        const copyButton = document.createElement('button');
-        copyButton.className = 'copy-btn';
-        copyButton.textContent = 'Copy';
-        copyButton.onclick = () => {
-            navigator.clipboard.writeText(value);
-            copyButton.textContent = 'Copied!';
-            setTimeout(() => {
-                copyButton.textContent = 'Copy';
-            }, 1000);
-        };
-
-        div.appendChild(labelSpan);
-        div.appendChild(copyButton);
-        return div;
-    }
-
-    addressInput.addEventListener('input', (e) => {
-        const address = e.target.value;
-        addressParts.innerHTML = '';
-        
-        if (address.trim()) {
-            const parts = splitAddress(address);
-            parts.forEach(part => {
-                if (part.value) {
-                    addressParts.appendChild(createPart(part.label, part.value));
-                }
-            });
-        }
-    });
-}
-
-// Initialize the address splitter
-document.addEventListener('DOMContentLoaded', initAddressSplitter);
-
-</script>
-
-
 
     <script>
-        let currentOrder = 'CSG';
-        const channelsCSG = ["animal planet", "cartoon network", "disney", "nickelodeon", "discovery", "history", "tlc", "tv land", "we tv", "wetv", "a&e", "aspire", "bravo", "food network", "hgtv", "id", "impact", "nat geo", "national geographic", "syfy", "travel channel", "cmt", "gameshow", "game show", "gsn", "mtv2", "mtv 2", "amc", "bet", "cleo", "comedy central", "e!", "fx", "hallmark", "hallmark movies", "lifetime", "lmn", "mtv", "own", "oxygen", "paramount", "pop", "revolt", "smithsonian", "tbs", "tcm", "tnt", "tru tv", "tv one", "usa", "vh1", "bbc america", "bbc world news", "thegrio", "black news channel", "cnbc", "cnn", "fox business", "fox news", "hln", "msnbc", "weather channel", "cbs sports", "espn", "espn2", "espn 2", "fox sports 1",  "fs1", "fs 1", "fox sports 2", "fs2", "fs 2", "balley sports", "golf", "spectrum sports net", "nfl", "bein en espanol", "bein sports", "cnn en espanol", "discovery en espanol", "espn deportes", "fox deportes", "galavision", "univision deportes", "wapa america"];
         const channelsAOS = ["animal planet", "cartoon network", "disney", "nickelodeon", "discovery", "history", "tlc", "tv land", "a&e", "aspire", "bravo", "food network", "hgtv", "id", "impact", "nat geo", "national geographic", "syfy", "travel channel", "we tv", "wetv", "amc", "bet", "cmt", "cleo", "comedy central", "e!", "fx", "game show", "gameshow", "gsn", "hallmark", "hallmark movies", "lifetime", "lmn", "mtv", "mtv 2", "mtv2", "own", "oxygen", "pop", "revolt", "smithsonian", "paramount", "tbs", "tcm", "tnt", "tv one", "tru tv", "usa", "vh1", "bbc america", "bbc world news", "thegrio", "cnbc", "cnn", "fox business", "fox news", "hln", "msnbc", "weather channel", "cbs sports", "espn", "espn2", "espn 2", "fox sports 1", "fs1", "fs 1", "fox sports 2", "fs2", "fs 2", "golf", "nfl", "bein en espanol", "bein sports", "cnn en espanol", "discovery en espanol", "espn deportes", "fox deportes", "galavision", "univision deportes", "wapa america", "balley sports", "spectrum sports net"];
-
+        
         const corrections = {
             "fs1": "fox sports 1",
             "fox sports 1": "fox sports 1",
@@ -398,61 +468,41 @@ document.addEventListener('DOMContentLoaded', initAddressSplitter);
             "wetv": "we tv"
         };
 
-        function toggleChannelOrder() {
-            currentOrder = document.getElementById("toggleCSGAOS").checked ? 'AOS' : 'CSG';
-            sortNames();
-        }
-
         function sortNames() {
-            const channels = currentOrder === 'CSG' ? channelsCSG : channelsAOS;
-
+            const channels = channelsAOS;
             let inputValues = [];
             for (let i = 1; i <= 15; i++) {
-                let input = document.getElementById("name" + i);
-                if (input && input.value) {
-                    inputValues.push(input.value.toLowerCase());
+                let input = document.getElementById(`name${i}`);
+                if (input && input.value.trim()) {
+                    inputValues.push(input.value.toLowerCase().trim());
                 }
             }
-
             inputValues = inputValues.map((value) => {
                 let lowerValue = value.toLowerCase();
-
-                // Apply correction if it exists
                 if (corrections[lowerValue]) {
                     lowerValue = corrections[lowerValue].toLowerCase();
                 }
-
-                // Check for exact match
                 let exactMatch = channels.find((channel) => channel.toLowerCase() === lowerValue);
                 if (exactMatch) {
                     return exactMatch;
                 }
-
-                // Try to find a channel that starts with the value
                 let regex = new RegExp("^" + lowerValue, "i");
                 let match = channels.find((channel) => regex.test(channel));
                 return match ? match : value;
             });
-
             let sortedValues = inputValues.sort((a, b) => {
-                let aIndex = channels.indexOf(a);
-                let bIndex = channels.indexOf(b);
+                let aIndex = channels.indexOf(a.toLowerCase());
+                let bIndex = channels.indexOf(b.toLowerCase());
                 if (aIndex === -1) aIndex = Number.MAX_VALUE;
                 if (bIndex === -1) bIndex = Number.MAX_VALUE;
                 return aIndex - bIndex;
             });
-
             let hasDuplicates = new Set(sortedValues).size !== sortedValues.length;
             document.getElementById("duplicateWarning").style.display = hasDuplicates ? "block" : "none";
-
-            let outputHTML = "";
-            sortedValues.forEach((value) => {
-                let checked = channels.includes(value.toLowerCase()) ? "checked" : "";
-                outputHTML += `<label><input type="checkbox" ${checked}> ${value}</label><br>`;
-            });
-
+            let outputHTML = sortedValues.map(value => `<div>${value}</div>`).join('');
             document.getElementById("output").innerHTML = outputHTML;
             updateChannelsLeft(Math.max(0, 15 - inputValues.length));
+            document.getElementById("copyButton").disabled = inputValues.length === 0;
         }
 
         function updateChannelsLeft(channelsLeft) {
@@ -468,27 +518,247 @@ document.addEventListener('DOMContentLoaded', initAddressSplitter);
                 input.name = `name${i}`;
                 input.placeholder = `Channel ${i}`;
                 input.addEventListener('input', sortNames);
+                input.setAttribute('aria-label', `Channel ${i}`);
                 form.appendChild(input);
             }
         }
 
         function copyToClipboard() {
             const outputDiv = document.getElementById("output");
-            let channels = Array.from(outputDiv.querySelectorAll("label"));
-            let channelNames = channels.map(label => label.textContent.trim()).join(", ");
+            let channelNames = Array.from(outputDiv.querySelectorAll("div")).map(div => div.textContent.trim()).join(", ");
             navigator.clipboard.writeText(channelNames).then(() => {
-                
+                alert('Copied to clipboard!');
             }).catch(err => {
                 console.error("Failed to copy: ", err);
             });
         }
 
+        function initAddressSplitter() {
+            const addressInput = document.getElementById('addressInput');
+            const addressParts = document.getElementById('addressParts');
+            const streetSuffixes = [
+                'Aly', 'Ave', 'Bnd', 'Blvd', 'Br', 'Byp', 'Cir', 'Ct', 'Cres', 'Dr', 'Expy', 'Ext', 'Fwy', 'Gdn', 'Hwy', 'Holw', 'Jct', 'Ln', 'Loop', 'Mall', 'Pkwy', 'Pass', 'Path', 'Pike', 'Pl', 'Plz', 'Pt', 'Rd', 'Rte', 'Row', 'Run', 'Sq', 'St', 'Ter', 'Trl', 'Way'
+            ];
+
+            function splitAddress(address) {
+                const numberMatch = address.match(/^\d+/);
+                const streetNumber = numberMatch ? numberMatch[0] : '';
+                const zipMatch = address.match(/\d{5}$/);
+                const zipCode = zipMatch ? zipMatch[0] : '';
+                let remainingText = address
+                    .replace(numberMatch ? numberMatch[0] : '', '')
+                    .replace(zipMatch ? zipMatch[0] : '', '')
+                    .trim();
+                const suffixPattern = streetSuffixes.join('|');
+                const regex = new RegExp(`^.*?\\b(${suffixPattern})(?=\\s|$|,|[A-Z])`, 'i');
+                const streetMatch = remainingText.match(regex);
+                const streetName = streetMatch ? streetMatch[0].trim() : remainingText;
+                return [
+                    { label: 'Street Number', value: streetNumber },
+                    { label: 'Street Name', value: streetName },
+                    { label: 'ZIP Code', value: zipCode }
+                ];
+            }
+
+            function createPart(label, value) {
+                const div = document.createElement('div');
+                div.className = 'address-part';
+                const labelSpan = document.createElement('span');
+                labelSpan.className = 'part-label';
+                labelSpan.textContent = `${label}: ${value}`;
+                const copyButton = document.createElement('button');
+                copyButton.className = 'copy-btn';
+                copyButton.textContent = 'Copy';
+                copyButton.setAttribute('aria-label', `Copy ${label}`);
+                copyButton.onclick = () => {
+                    navigator.clipboard.writeText(value);
+                    copyButton.textContent = 'Copied!';
+                    setTimeout(() => { copyButton.textContent = 'Copy'; }, 1500);
+                };
+                div.appendChild(labelSpan);
+                div.appendChild(copyButton);
+                return div;
+            }
+
+            addressInput.addEventListener('input', (e) => {
+                const address = e.target.value.trim();
+                addressParts.innerHTML = '';
+                if (address) {
+                    const parts = splitAddress(address);
+                    parts.forEach(part => {
+                        if (part.value) {
+                            addressParts.appendChild(createPart(part.label, part.value));
+                        }
+                    });
+                }
+            });
+        }
+
+        function initTransferTracker() {
+            const form = document.getElementById('trackerForm');
+            const resultDiv = document.getElementById('result');
+            const percentageP = document.getElementById('percentage');
+            const additionalInfoP = document.getElementById('additionalInfo');
+            const totalCallsInput = document.getElementById('totalCalls');
+            const transferredInput = document.getElementById('transferred');
+            const goalInput = document.getElementById('goal');
+
+            // Load saved data from localStorage on page load
+            const savedTotalCalls = localStorage.getItem('totalCalls');
+            const savedTransferred = localStorage.getItem('transferred');
+            const savedGoal = localStorage.getItem('goal');
+
+            if (savedTotalCalls) {
+                totalCallsInput.value = savedTotalCalls;
+            }
+            if (savedTransferred) {
+                transferredInput.value = savedTransferred;
+            }
+            if (savedGoal) {
+                goalInput.value = savedGoal;
+            }
+
+            function calculate() {
+                const totalCalls = parseFloat(totalCallsInput.value);
+                const transferred = parseFloat(transferredInput.value);
+                const goalPercent = parseFloat(goalInput.value);
+                
+                if (isNaN(totalCalls) || isNaN(transferred) || isNaN(goalPercent) || 
+                    totalCalls < 0 || transferred < 0 || goalPercent < 0 || goalPercent > 100) {
+                    showError('Please enter valid non-negative numbers. Goal must be between 0 and 100.');
+                    return;
+                }
+                
+                if (transferred > totalCalls) {
+                    showError('Transfers cannot exceed total calls.');
+                    return;
+                }
+                
+                if (totalCalls === 0) {
+                    showError('Total calls must be greater than zero.');
+                    return;
+                }
+                
+                if (goalPercent === 0) {
+                    showError('Goal percentage must be greater than zero for meaningful calculations.');
+                    return;
+                }
+                
+                const nonTransferred = totalCalls - transferred;
+                const rate = (nonTransferred / totalCalls) * 100;
+                const formattedRate = rate.toFixed(2);
+                const goal = goalPercent / 100;
+                
+                percentageP.innerHTML = `Current Transfer Prevention Rate: <span class="${rate >= goalPercent ? 'success' : 'warning'}">${formattedRate}%</span>`;
+                
+                if (rate < goalPercent) {
+                    if (goal >= 1) {
+                        additionalInfoP.textContent = `Goal is 100% or more, which requires no transfers at all. You have ${transferred} transfers.`;
+                    } else {
+                        const needed = Math.ceil((goal * totalCalls - nonTransferred) / (1 - goal));
+                        additionalInfoP.textContent = `You need to handle ${needed} more calls without transferring to reach ${goalPercent}%.`;
+                    }
+                } else if (rate > goalPercent) {
+                    const affordable = Math.floor(nonTransferred / goal - totalCalls);
+                    additionalInfoP.textContent = `You can afford ${affordable} more transfers (assuming each is a new call) before dropping below ${goalPercent}%.`;
+                } else {
+                    additionalInfoP.textContent = `You are exactly at ${goalPercent}%. To stay at or above, avoid transfers on future calls.`;
+                }
+                
+                // Save data to localStorage
+                localStorage.setItem('totalCalls', totalCalls);
+                localStorage.setItem('transferred', transferred);
+                localStorage.setItem('goal', goalPercent);
+                
+                resultDiv.style.display = 'block';
+            }
+            
+            function showError(message) {
+                percentageP.textContent = '';
+                additionalInfoP.innerHTML = `<span class="error">${message}</span>`;
+                resultDiv.style.display = 'block';
+            }
+
+            form.addEventListener('submit', function(event) {
+                event.preventDefault();
+                calculate();
+            });
+
+            // Auto-calculate on input change
+            [totalCallsInput, transferredInput, goalInput].forEach(input => {
+                input.addEventListener('input', calculate);
+            });
+
+            // Increment/Decrement buttons
+            const incBtns = document.querySelectorAll('.inc-btn');
+            const decBtns = document.querySelectorAll('.dec-btn');
+
+            function updateValue(btn, increment) {
+                const inputId = btn.dataset.input;
+                const input = document.getElementById(inputId);
+                let val = parseFloat(input.value) || 0;
+                const min = parseFloat(input.min) || 0;
+                const max = parseFloat(input.max) || Infinity;
+                const digits = input.id === 'goal' ? 2 : 0;
+                const step = 1; // Increment/decrement by 1 for all
+
+                if (increment) {
+                    val += step;
+                    val = Math.min(val, max);
+                } else {
+                    val -= step;
+                    val = Math.max(val, min);
+                }
+
+                input.value = digits > 0 ? val.toFixed(digits) : Math.round(val);
+                calculate(); // Auto-calculate after update
+            }
+
+            incBtns.forEach(btn => {
+                btn.addEventListener('click', () => updateValue(btn, true));
+            });
+
+            decBtns.forEach(btn => {
+                btn.addEventListener('click', () => updateValue(btn, false));
+            });
+        }
+
+        function initDrawers() {
+            const drawerButtons = document.querySelectorAll('.drawer-button');
+            const drawers = document.querySelectorAll('.drawer');
+
+            drawerButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const targetDrawerId = button.dataset.drawer;
+                    const targetDrawer = document.getElementById(targetDrawerId);
+
+                    // Close all drawers and remove active class from all buttons
+                    drawers.forEach(drawer => {
+                        if (drawer !== targetDrawer) {
+                            drawer.classList.remove('open');
+                        }
+                    });
+                    drawerButtons.forEach(btn => {
+                        if (btn !== button) {
+                            btn.classList.remove('active');
+                        }
+                    });
+
+                    // Toggle the target drawer and button
+                    const isOpen = targetDrawer.classList.contains('open');
+                    targetDrawer.classList.toggle('open', !isOpen);
+                    button.classList.toggle('active', !isOpen);
+                });
+            });
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             generateInputs();
-            document.getElementById('toggleCSGAOS').addEventListener('change', toggleChannelOrder);
             document.getElementById('copyButton').addEventListener('click', copyToClipboard);
+            initAddressSplitter();
+            initTransferTracker();
+            initDrawers();
         });
-
     </script>
 </body>
 </html>
