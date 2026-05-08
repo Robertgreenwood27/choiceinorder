@@ -709,7 +709,7 @@ kbd {
         <div class="notes-pinned" id="notesPinned"></div>
         <div class="notes-compose">
           <textarea class="notes-textarea" id="notesArea" placeholder="Type a note… press Ctrl+Enter to pin it as a copyable item."></textarea>
-          <div class="notes-hint"><kbd>Ctrl</kbd>+<kbd>Enter</kbd> to pin &nbsp;·&nbsp; <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Del</kbd> to clear all pinned</div>
+          <div class="notes-hint"><kbd>Ctrl</kbd>+<kbd>Enter</kbd> to pin &nbsp;·&nbsp; <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Enter</kbd> to calculate &nbsp;·&nbsp; <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Del</kbd> to clear all</div>
         </div>
       </div>
     </div>
@@ -1131,8 +1131,8 @@ function renderNotes() {
   document.getElementById('noteCount').textContent = `${pinnedNotes.length} pinned`;
 
   pinnedNotes.forEach((note, i) => {
-    const phone = detectPhone(note);
-    const math  = !phone ? detectMath(note) : null;
+    const phone = detectPhone(note.text);
+    const math  = note.forceMath ? detectMath(note.text) : null;
     const isPhone = !!phone;
     const isMath  = !!math;
 
@@ -1143,11 +1143,11 @@ function renderNotes() {
     text.className = 'pinned-text';
 
     if (isPhone) {
-      text.innerHTML = `<span class="phone-clean">${phone}</span><span class="phone-raw">${note}</span>`;
+      text.innerHTML = `<span class="phone-clean">${phone}</span><span class="phone-raw">${note.text}</span>`;
     } else if (isMath) {
       text.innerHTML = `<span class="math-result">${math}</span>`;
     } else {
-      text.textContent = note;
+      text.textContent = note.text;
     }
 
     const actions = document.createElement('div');
@@ -1157,7 +1157,7 @@ function renderNotes() {
     copyBtn.className = 'pinned-copy';
     copyBtn.textContent = isPhone ? 'Copy #' : 'Copy';
 
-    const copyValue = isPhone ? phone : isMath ? math : note;
+    const copyValue = isPhone ? phone : isMath ? math : note.text;
     copyBtn.addEventListener('click', () => {
       doClipboard(copyValue, () => {
         copyBtn.textContent = 'Copied!';
@@ -1186,11 +1186,20 @@ function renderNotes() {
 }
 
 document.getElementById('notesArea').addEventListener('keydown', e => {
+  if (e.ctrlKey && e.shiftKey && e.key === 'Enter') {
+    e.preventDefault();
+    const val = e.target.value.trim();
+    if (!val) return;
+    pinnedNotes.unshift({ text: val, forceMath: true });
+    e.target.value = '';
+    renderNotes();
+    return;
+  }
   if (e.ctrlKey && e.key === 'Enter') {
     e.preventDefault();
     const val = e.target.value.trim();
     if (!val) return;
-    pinnedNotes.unshift(val);
+    pinnedNotes.unshift({ text: val, forceMath: false });
     e.target.value = '';
     renderNotes();
   }
