@@ -548,7 +548,42 @@ function recalc(){
   document.getElementById('paceStrip').innerHTML=[{label:'Calls/Day',value:callsPerDay.toFixed(1)},{label:'Total Calls',value:calls},{label:'Proj. Total Calls',value:Math.round(projTotal)},{label:'Working Days Left',value:wdRemaining},{label:'Cycle Progress',value:cyclePct.toFixed(0)+'%'}].map(p=>`<div class="pace-item"><span class="pace-lbl">${p.label}</span><span class="pace-val">${p.value}</span></div>`).join('');
   const cards=[];
   {const under=aht<=gAHT;const fn=projTotal-calls;const maxFS=gAHT*projTotal-totalSec;const maxAF=fn>0?maxFS/fn:0;cards.push({name:'Avg Handle Time',current:Math.round(aht)+'s',goal:'≤ '+gAHT+'s',status:under?'good':'bad',barPct:Math.min(100,(gAHT/Math.max(aht,1))*100),insight:under?`<span class="hi">${(gAHT-aht).toFixed(0)}s under goal.</span> Max avg on remaining calls: <span class="acc">${Math.round(maxAF)}s</span>.`:`<span class="lo">${(aht-gAHT).toFixed(0)}s over goal.</span> Remaining calls must avg <span class="mid">${Math.round(maxAF)}s</span>.`,projection:`Blended AHT: ${Math.round(aht)}s across ${calls} calls.`})}
-  {const under=credits<=gCred;const rIZ=projTotal>0?totalCred/projTotal:credits;let dug=null;if(!under&&callsPerDay>0){const d=(totalCred/gCred-calls)/callsPerDay;if(d>0&&d<=wdRemaining)dug=Math.ceil(d)}cards.push({name:'Credits / Call',current:credits.toFixed(2),goal:'≤ '+gCred.toFixed(2),status:under?'good':credits<=gCred*1.3?'warn':'bad',barPct:Math.min(100,(gCred/Math.max(credits,0.01))*100),insight:under?`<span class="hi">At goal.</span> Total credits given: <span class="acc">$${totalCred.toFixed(2)}</span>.`:`Total credits: <span class="mid">$${totalCred.toFixed(2)}</span>. At $0 → end rate ≈ <span class="${rIZ<=gCred?'hi':'lo'}">${rIZ.toFixed(2)}</span>.`,projection:dug?`At $0 credits: goal in ~<span class="acc">${dug}</span> day${dug!==1?'s':''} (~${fmtDate(workingDaysUntilGoal(today,wdRemaining,dug))}).`:under?`Maintain ≤ $${gCred.toFixed(2)}/call.`:`End-of-cycle at $0 ≈ ${rIZ.toFixed(2)} — ${rIZ<=gCred?'will reach goal':'still above goal'}.`})}
+
+{
+  const under = credits <= gCred;
+  const rIZ = projTotal > 0 ? totalCred / projTotal : credits;
+
+  let creditGoalDate = null;
+  let daysToCreditGoal = null;
+
+  if (!under && callsPerDay > 0) {
+    const rawDaysNeeded = (totalCred / gCred - calls) / callsPerDay;
+    daysToCreditGoal = Math.ceil(rawDaysNeeded);
+
+    if (daysToCreditGoal > 0 && daysToCreditGoal <= wdRemaining) {
+      creditGoalDate = workingDaysUntilGoal(today, wdRemaining, daysToCreditGoal);
+    }
+  }
+
+  cards.push({
+    name: 'Credits / Call',
+    current: credits.toFixed(2),
+    goal: '≤ ' + gCred.toFixed(2),
+    status: under ? 'good' : credits <= gCred * 1.3 ? 'warn' : 'bad',
+    barPct: Math.min(100, (gCred / Math.max(credits, 0.01)) * 100),
+
+    insight: under
+      ? `<span class="hi">At goal.</span> Total credits given: <span class="acc">$${totalCred.toFixed(2)}</span>.`
+      : `Total credits: <span class="mid">$${totalCred.toFixed(2)}</span>. Current trend → end rate ≈ <span class="lo">${credits.toFixed(2)}</span>. At <span class="hi">$0</span> more credits → end rate ≈ <span class="${rIZ <= gCred ? 'hi' : 'lo'}">${rIZ.toFixed(2)}</span>.`,
+
+    projection: under
+      ? `Already at goal. Maintain ≤ $${gCred.toFixed(2)}/call.`
+      : creditGoalDate
+        ? `Based on your average calls, if you give <span class="hi">$0</span> more credits, you should reach goal by <span class="acc">${fmtDate(creditGoalDate)}</span>.`
+        : `Based on your average calls, even at <span class="hi">$0</span> more credits, projected end rate is <span class="${rIZ <= gCred ? 'hi' : 'lo'}">${rIZ.toFixed(2)}</span> — ${rIZ <= gCred ? 'goal should be reachable by cycle end' : 'still above goal by cycle end'}.`
+  });
+}
+
   function pctCard(name,current,goal){const pct=current/100,gPct=goal/100,over=current>=goal,goodSoFar=Math.round(pct*calls);if(over){const maxT=gPct>0?goodSoFar/gPct:Infinity,absorb=Math.max(0,Math.floor(maxT-calls)),pG=goodSoFar+Math.round(pct*callsPerDay*wdRemaining),pR=projTotal>0?(pG/projTotal*100):current;return{name,current:current.toFixed(1)+'%',goal:'≥ '+goal.toFixed(1)+'%',status:'good',barPct:Math.min(100,(current/(goal*1.2))*100),insight:`<span class="hi">Above goal by ${(current-goal).toFixed(1)}%.</span> Can absorb <span class="acc">${absorb}</span> more failure${absorb!==1?'s':''} before dropping below ${goal.toFixed(1)}%.`,projection:`At current pace: end-of-cycle ≈ <span class="acc">${pR.toFixed(1)}%</span>.`}}else{const d100=(callsPerDay*(1-gPct))>0?(gPct*calls-goodSoFar)/(callsPerDay*(1-gPct)):Infinity,dR=Math.ceil(d100),reach=isFinite(dR)&&dR<=wdRemaining,pG=goodSoFar+Math.round(pct*callsPerDay*wdRemaining),pR=projTotal>0?(pG/projTotal*100):current;return{name,current:current.toFixed(1)+'%',goal:'≥ '+goal.toFixed(1)+'%',status:current>=goal*0.97?'warn':'bad',barPct:Math.min(100,(current/goal)*100),insight:`<span class="lo">Below goal by ${(goal-current).toFixed(1)}%.</span> Need ${(gPct*100).toFixed(1)}%+ going forward.`,projection:reach?`At 100% success: goal in ~<span class="acc">${dR}</span> day${dR!==1?'s':''} (~${fmtDate(workingDaysUntilGoal(today,wdRemaining,dR))}). Current pace → ${pR.toFixed(1)}%.`:`Current pace → <span class="lo">${pR.toFixed(1)}%</span>. May not reach goal this cycle.`}}}
   cards.push(pctCard('Self-Resolution',selfRes,gSelfRes));
   cards.push(pctCard('Sentiment',senti,gSenti));
