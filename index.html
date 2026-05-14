@@ -6,12 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sidekick</title>
   <style>
-    /* ============================================================
-   GLOBAL THEME + BASE LAYOUT
-   ------------------------------------------------------------
-   Design tokens live in :root. Most UI pieces reuse these vars.
-   Keep colors/fonts here so the whole app can be themed quickly.
-   ============================================================ */
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=DM+Sans:wght@400;500;600&display=swap');
 
     *,
@@ -70,9 +64,7 @@
       text-transform: uppercase
     }
 
-    .hdr-sep {
-      flex: 1
-    }
+    .hdr-sep { flex: 1 }
 
     .hdr-time {
       font-family: var(--mono);
@@ -106,14 +98,8 @@
       white-space: nowrap
     }
 
-    .tab:hover {
-      color: var(--dim)
-    }
-
-    .tab.active {
-      color: var(--accent);
-      border-color: var(--accent)
-    }
+    .tab:hover { color: var(--dim) }
+    .tab.active { color: var(--accent); border-color: var(--accent) }
 
     .workspace {
       flex: 1;
@@ -125,15 +111,13 @@
       min-height: 0
     }
 
-    .workspace.active {
-      display: flex
-    }
+    .workspace.active { display: flex }
 
     .panel {
       background: var(--panel);
       border: 1px solid var(--border);
       border-radius: 6px;
-      overflow: hidden
+      overflow: visible;
     }
 
     .panel-hdr {
@@ -161,9 +145,7 @@
       color: var(--accent)
     }
 
-    .panel-body {
-      padding: .9rem
-    }
+    .panel-body { padding: .9rem }
 
     .btn {
       padding: .55rem 1rem;
@@ -180,15 +162,8 @@
       color: var(--dim)
     }
 
-    .btn:hover {
-      border-color: var(--border2);
-      color: var(--text)
-    }
-
-    .btn:disabled {
-      opacity: .35;
-      cursor: not-allowed
-    }
+    .btn:hover { border-color: var(--border2); color: var(--text) }
+    .btn:disabled { opacity: .35; cursor: not-allowed }
 
     .btn-accent {
       background: var(--accent);
@@ -196,9 +171,7 @@
       border-color: var(--accent)
     }
 
-    .btn-accent:hover {
-      filter: brightness(1.1)
-    }
+    .btn-accent:hover { filter: brightness(1.1) }
 
     .btn-accent:disabled {
       background: var(--raised);
@@ -207,9 +180,7 @@
       filter: none
     }
 
-    .btn-ghost {
-      background: transparent
-    }
+    .btn-ghost { background: transparent }
 
     kbd {
       display: inline-block;
@@ -222,53 +193,18 @@
     }
 
     @keyframes slideIn {
-      from {
-        opacity: 0;
-        transform: translateY(-4px)
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0)
-      }
+      from { opacity: 0; transform: translateY(-4px) }
+      to { opacity: 1; transform: translateY(0) }
     }
 
-    ::-webkit-scrollbar {
-      width: 5px;
-      height: 5px
-    }
+    ::-webkit-scrollbar { width: 5px; height: 5px }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px }
+    ::-webkit-scrollbar-track { background: transparent }
 
-    ::-webkit-scrollbar-thumb {
-      background: var(--border2);
-      border-radius: 3px
-    }
-
-    ::-webkit-scrollbar-track {
-      background: transparent
-    }
-
-    /* ============================================================
-   CHANNELS TAB
-   ------------------------------------------------------------
-   Input + suggestion box on the left, sorted selected-channel
-   queue on the right. JavaScript uses these class hooks only
-   for styling; functional wiring mostly happens through IDs.
-   ============================================================ */
-    .ch-layout {
-      display: grid;
-      grid-template-columns: 1fr 230px;
-      gap: 1rem
-    }
-
-    .ch-input-area {
-      display: flex;
-      flex-direction: column;
-      gap: .5rem
-    }
-
-    .ch-input-wrap {
-      position: relative
-    }
+    /* CHANNELS */
+    .ch-layout { display: grid; grid-template-columns: 1fr 230px; gap: 1rem }
+    .ch-input-area { display: flex; flex-direction: column; gap: .5rem }
+    .ch-input-wrap { position: relative }
 
     .ch-type-input {
       width: 100%;
@@ -284,63 +220,18 @@
       letter-spacing: .02em
     }
 
-    .ch-type-input:focus {
-      border-color: var(--accent3)
-    }
+    .ch-type-input:focus { border-color: var(--accent3) }
+    .ch-type-input::placeholder { color: var(--muted); font-size: .8rem }
+    .ch-type-input.match { border-color: var(--accent) }
+    .ch-type-input.no-match { border-color: var(--danger) }
 
-    .ch-type-input::placeholder {
-      color: var(--muted);
-      font-size: .8rem
-    }
+    .ch-suggestion { min-height: 1.8rem; display: flex; align-items: center; gap: .6rem; padding: .2rem .1rem }
+    .ch-suggestion-name { font-family: var(--mono); font-size: .82rem; color: var(--accent); font-weight: 600 }
+    .ch-suggestion-hint { font-family: var(--mono); font-size: .68rem; color: var(--muted) }
+    .ch-suggestion-none { font-family: var(--mono); font-size: .72rem; color: var(--danger) }
+    .ch-hint { font-family: var(--mono); font-size: .62rem; color: var(--muted); letter-spacing: .04em; padding: .1rem 0 }
 
-    .ch-type-input.match {
-      border-color: var(--accent)
-    }
-
-    .ch-type-input.no-match {
-      border-color: var(--danger)
-    }
-
-    .ch-suggestion {
-      min-height: 1.8rem;
-      display: flex;
-      align-items: center;
-      gap: .6rem;
-      padding: .2rem .1rem
-    }
-
-    .ch-suggestion-name {
-      font-family: var(--mono);
-      font-size: .82rem;
-      color: var(--accent);
-      font-weight: 600
-    }
-
-    .ch-suggestion-hint {
-      font-family: var(--mono);
-      font-size: .68rem;
-      color: var(--muted)
-    }
-
-    .ch-suggestion-none {
-      font-family: var(--mono);
-      font-size: .72rem;
-      color: var(--danger)
-    }
-
-    .ch-hint {
-      font-family: var(--mono);
-      font-size: .62rem;
-      color: var(--muted);
-      letter-spacing: .04em;
-      padding: .1rem 0
-    }
-
-    .ch-right {
-      display: flex;
-      flex-direction: column;
-      gap: .8rem
-    }
+    .ch-right { display: flex; flex-direction: column; gap: .8rem }
 
     .ch-queue {
       background: var(--raised);
@@ -382,16 +273,8 @@
       animation: slideIn .1s ease
     }
 
-    .ch-queue-num {
-      font-size: .6rem;
-      color: var(--muted);
-      min-width: 1.2rem;
-      text-align: right
-    }
-
-    .ch-queue-name {
-      flex: 1
-    }
+    .ch-queue-num { font-size: .6rem; color: var(--muted); min-width: 1.2rem; text-align: right }
+    .ch-queue-name { flex: 1 }
 
     .ch-queue-del {
       background: none;
@@ -404,36 +287,14 @@
       transition: color .1s
     }
 
-    .ch-queue-item.custom {
-      border-color: var(--warn)
-    }
+    .ch-queue-item.custom { border-color: var(--warn) }
+    .ch-queue-item.custom .ch-queue-name { color: var(--warn) }
+    .ch-queue-item.custom .ch-queue-num { color: var(--warn); opacity: .6 }
 
-    .ch-queue-item.custom .ch-queue-name {
-      color: var(--warn)
-    }
+    .ch-count { font-family: var(--mono); font-size: .7rem; color: var(--muted); text-align: center }
+    .ch-count span { color: var(--accent); font-weight: 700 }
 
-    .ch-queue-item.custom .ch-queue-num {
-      color: var(--warn);
-      opacity: .6
-    }
-
-    .ch-count {
-      font-family: var(--mono);
-      font-size: .7rem;
-      color: var(--muted);
-      text-align: center
-    }
-
-    .ch-count span {
-      color: var(--accent);
-      font-weight: 700
-    }
-
-    .ch-actions {
-      display: flex;
-      flex-direction: column;
-      gap: .5rem
-    }
+    .ch-actions { display: flex; flex-direction: column; gap: .5rem }
 
     .dup-warn {
       display: none;
@@ -447,15 +308,9 @@
       background: rgba(239, 68, 68, .08)
     }
 
-    .dup-warn.show {
-      display: block
-    }
+    .dup-warn.show { display: block }
 
-    /* ============================================================
-   ADDRESS TAB
-   ------------------------------------------------------------
-   Styles for parsed address rows and copy buttons.
-   ============================================================ */
+    /* ADDRESS */
     .addr-input {
       width: 100%;
       padding: .6rem .9rem;
@@ -470,19 +325,10 @@
       margin-bottom: .8rem
     }
 
-    .addr-input:focus {
-      border-color: var(--accent3)
-    }
+    .addr-input:focus { border-color: var(--accent3) }
+    .addr-input::placeholder { color: var(--muted) }
 
-    .addr-input::placeholder {
-      color: var(--muted)
-    }
-
-    .addr-parts {
-      display: flex;
-      flex-direction: column;
-      gap: .45rem
-    }
+    .addr-parts { display: flex; flex-direction: column; gap: .45rem }
 
     .addr-part {
       display: flex;
@@ -495,9 +341,7 @@
       transition: border-color .15s
     }
 
-    .addr-part:hover {
-      border-color: var(--border2)
-    }
+    .addr-part:hover { border-color: var(--border2) }
 
     .addr-part-label {
       font-family: var(--mono);
@@ -508,12 +352,7 @@
       min-width: 90px
     }
 
-    .addr-part-value {
-      font-family: var(--mono);
-      font-size: .85rem;
-      color: var(--text);
-      flex: 1
-    }
+    .addr-part-value { font-family: var(--mono); font-size: .85rem; color: var(--text); flex: 1 }
 
     .copy-btn {
       padding: .3rem .7rem;
@@ -531,54 +370,16 @@
       white-space: nowrap
     }
 
-    .copy-btn:hover {
-      border-color: var(--accent3);
-      color: var(--accent3)
-    }
+    .copy-btn:hover { border-color: var(--accent3); color: var(--accent3) }
+    .copy-btn.copied { border-color: var(--success); color: var(--success) }
 
-    .copy-btn.copied {
-      border-color: var(--success);
-      color: var(--success)
-    }
+    /* NOTES */
+    #tab-notes { flex: 1; display: none; flex-direction: column; min-height: 0 }
+    #tab-notes.active { display: flex }
+    #tab-notes .panel { flex: 1; display: flex; flex-direction: column; min-height: 0 }
+    #tab-notes .panel-body { flex: 1; display: flex; flex-direction: column; min-height: 0; padding: 0 }
 
-    /* ============================================================
-   NOTES TAB
-   ------------------------------------------------------------
-   Pinned notes appear above the composer. Some pinned notes get
-   special styling when detected as phone numbers or math results.
-   ============================================================ */
-    #tab-notes {
-      flex: 1;
-      display: none;
-      flex-direction: column;
-      min-height: 0
-    }
-
-    #tab-notes.active {
-      display: flex
-    }
-
-    #tab-notes .panel {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      min-height: 0
-    }
-
-    #tab-notes .panel-body {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
-      padding: 0
-    }
-
-    .notes-layout {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      min-height: 0
-    }
+    .notes-layout { flex: 1; display: flex; flex-direction: column; min-height: 0 }
 
     .notes-pinned {
       flex: 1;
@@ -620,14 +421,10 @@
       white-space: pre-wrap
     }
 
-    .pinned-actions {
-      display: flex;
-      gap: .35rem;
-      flex-shrink: 0;
-      padding-top: .05rem
-    }
+    .pinned-actions { display: flex; gap: .35rem; flex-shrink: 0; padding-top: .05rem }
 
     .pinned-copy,
+    .pinned-edit,
     .pinned-del {
       padding: .2rem .5rem;
       font-family: var(--mono);
@@ -642,32 +439,70 @@
       background: var(--panel)
     }
 
-    .pinned-copy {
-      color: var(--dim)
+    .pinned-copy { color: var(--dim) }
+    .pinned-copy:hover { border-color: var(--accent3); color: var(--accent3) }
+    .pinned-copy.copied { border-color: var(--success); color: var(--success) }
+    .pinned-edit { color: var(--muted) }
+    .pinned-edit:hover { border-color: var(--warn); color: var(--warn) }
+    .pinned-del { color: var(--muted) }
+    .pinned-del:hover { border-color: var(--danger); color: var(--danger) }
+
+    .pinned-edit-area {
+      width: 100%;
+      padding: .4rem .5rem;
+      background: var(--bg);
+      border: 1px solid var(--accent3);
+      color: var(--text);
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: .75rem;
+      line-height: 1.5;
+      resize: vertical;
+      outline: none;
+      min-height: 2.4rem
     }
 
-    .pinned-copy:hover {
-      border-color: var(--accent3);
-      color: var(--accent3)
+    .pinned-edit-actions {
+      display: flex;
+      gap: .35rem;
+      margin-top: .3rem
     }
 
-    .pinned-copy.copied {
-      border-color: var(--success);
-      color: var(--success)
+    .pinned-save {
+      padding: .2rem .55rem;
+      font-family: var(--mono);
+      font-size: .6rem;
+      font-weight: 700;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      border-radius: 3px;
+      cursor: pointer;
+      border: 1px solid var(--accent);
+      background: rgba(0,229,195,.1);
+      color: var(--accent);
+      transition: all .12s
     }
 
-    .pinned-del {
-      color: var(--muted)
+    .pinned-save:hover { filter: brightness(1.2) }
+
+    .pinned-cancel {
+      padding: .2rem .55rem;
+      font-family: var(--mono);
+      font-size: .6rem;
+      font-weight: 700;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      border-radius: 3px;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: var(--muted);
+      transition: all .12s
     }
 
-    .pinned-del:hover {
-      border-color: var(--danger);
-      color: var(--danger)
-    }
+    .pinned-cancel:hover { border-color: var(--border2); color: var(--dim) }
 
-    .pinned-phone {
-      border-color: var(--accent3)
-    }
+    .pinned-phone { border-color: var(--accent3) }
 
     .phone-clean {
       display: block;
@@ -678,25 +513,9 @@
       letter-spacing: .08em
     }
 
-    .phone-raw {
-      display: block;
-      font-family: var(--mono);
-      font-size: .62rem;
-      color: var(--muted);
-      margin-top: .15rem
-    }
-
-    .pinned-math {
-      border-color: var(--accent)
-    }
-
-    .math-result {
-      font-family: var(--mono);
-      font-size: .88rem;
-      font-weight: 600;
-      color: var(--accent);
-      letter-spacing: .03em
-    }
+    .phone-raw { display: block; font-family: var(--mono); font-size: .62rem; color: var(--muted); margin-top: .15rem }
+    .pinned-math { border-color: var(--accent) }
+    .math-result { font-family: var(--mono); font-size: .88rem; font-weight: 600; color: var(--accent); letter-spacing: .03em }
 
     .notes-compose {
       flex-shrink: 0;
@@ -724,31 +543,12 @@
       transition: border-color .15s
     }
 
-    .notes-textarea:focus {
-      border-color: var(--accent3)
-    }
+    .notes-textarea:focus { border-color: var(--accent3) }
+    .notes-textarea::placeholder { color: var(--muted) }
+    .notes-hint { font-family: var(--mono); font-size: .62rem; color: var(--muted); letter-spacing: .04em }
 
-    .notes-textarea::placeholder {
-      color: var(--muted)
-    }
-
-    .notes-hint {
-      font-family: var(--mono);
-      font-size: .62rem;
-      color: var(--muted);
-      letter-spacing: .04em
-    }
-
-    /* ============================================================
-   SCORECARD TAB
-   ------------------------------------------------------------
-   Metric inputs, projections, logger cards, and cycle progress.
-   ============================================================ */
-    .sc-config-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-      gap: .7rem
-    }
+    /* SCORECARD */
+    .sc-config-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: .7rem }
 
     .sc-field label {
       display: block;
@@ -773,9 +573,7 @@
       transition: border-color .15s
     }
 
-    .sc-field input:focus {
-      border-color: var(--accent3)
-    }
+    .sc-field input:focus { border-color: var(--accent3) }
 
     .day-toggle {
       padding: .3rem .55rem;
@@ -791,23 +589,9 @@
       user-select: none
     }
 
-    .day-toggle.active {
-      background: rgba(239, 68, 68, .15);
-      border-color: var(--danger);
-      color: var(--danger)
-    }
-
-    .days-off-wrap {
-      display: flex;
-      gap: .3rem;
-      flex-wrap: wrap
-    }
-
-    .metrics-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: .7rem
-    }
+    .day-toggle.active { background: rgba(239, 68, 68, .15); border-color: var(--danger); color: var(--danger) }
+    .days-off-wrap { display: flex; gap: .3rem; flex-wrap: wrap }
+    .metrics-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: .7rem }
 
     .metric-group {
       background: var(--raised);
@@ -826,11 +610,7 @@
       margin-bottom: .4rem
     }
 
-    .metric-row {
-      display: flex;
-      gap: .4rem;
-      align-items: center
-    }
+    .metric-row { display: flex; gap: .4rem; align-items: center }
 
     .metric-row input {
       flex: 1;
@@ -846,16 +626,8 @@
       transition: border-color .15s
     }
 
-    .metric-row input:focus {
-      border-color: var(--accent3)
-    }
-
-    .metric-row-label {
-      font-family: var(--mono);
-      font-size: .6rem;
-      color: var(--muted);
-      white-space: nowrap
-    }
+    .metric-row input:focus { border-color: var(--accent3) }
+    .metric-row-label { font-family: var(--mono); font-size: .6rem; color: var(--muted); white-space: nowrap }
 
     .ginline {
       width: 55px;
@@ -870,15 +642,8 @@
       outline: none
     }
 
-    .ginline:focus {
-      border-color: var(--accent3)
-    }
-
-    .proj-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      gap: .8rem
-    }
+    .ginline:focus { border-color: var(--accent3) }
+    .proj-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: .8rem }
 
     .proj-card {
       background: var(--raised);
@@ -891,184 +656,41 @@
       transition: border-color .2s
     }
 
-    .proj-card.good {
-      border-color: rgba(34, 197, 94, .35)
-    }
+    .proj-card.good { border-color: rgba(34, 197, 94, .35) }
+    .proj-card.warn { border-color: rgba(245, 158, 11, .35) }
+    .proj-card.bad { border-color: rgba(239, 68, 68, .35) }
+    .proj-card.neutral { border-color: var(--border2) }
 
-    .proj-card.warn {
-      border-color: rgba(245, 158, 11, .35)
-    }
+    .proj-name { font-family: var(--mono); font-size: .62rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted) }
+    .proj-top { display: flex; align-items: baseline; gap: .5rem }
+    .proj-cur { font-family: var(--mono); font-size: 1.5rem; font-weight: 700; line-height: 1 }
+    .proj-cur.good { color: var(--success) }
+    .proj-cur.warn { color: var(--warn) }
+    .proj-cur.bad { color: var(--danger) }
+    .proj-cur.neutral { color: var(--dim) }
+    .proj-goal-lbl { font-family: var(--mono); font-size: .72rem; color: var(--muted) }
+    .proj-bar-wrap { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden }
+    .proj-bar { height: 100%; border-radius: 2px; transition: width .4s ease }
+    .proj-bar.good { background: var(--success) }
+    .proj-bar.warn { background: var(--warn) }
+    .proj-bar.bad { background: var(--danger) }
+    .proj-insight { font-family: var(--mono); font-size: .68rem; color: var(--dim); line-height: 1.6 }
+    .proj-insight .hi { color: var(--success); font-weight: 700 }
+    .proj-insight .lo { color: var(--danger); font-weight: 700 }
+    .proj-insight .mid { color: var(--warn); font-weight: 700 }
+    .proj-insight .acc { color: var(--accent); font-weight: 700 }
+    .proj-proj { font-family: var(--mono); font-size: .68rem; color: var(--accent3); padding-top: .3rem; border-top: 1px solid var(--border); line-height: 1.6 }
 
-    .proj-card.bad {
-      border-color: rgba(239, 68, 68, .35)
-    }
+    .cycle-meta { display: flex; justify-content: space-between; font-family: var(--mono); font-size: .65rem; color: var(--muted); margin-bottom: .35rem }
+    .cycle-track { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; position: relative }
+    .cycle-fill { height: 100%; background: var(--accent3); border-radius: 3px; transition: width .4s }
 
-    .proj-card.neutral {
-      border-color: var(--border2)
-    }
+    .pace-strip { display: flex; gap: 1rem; flex-wrap: wrap; padding: .5rem 0 .2rem }
+    .pace-item { display: flex; flex-direction: column; gap: .15rem }
+    .pace-lbl { font-family: var(--mono); font-size: .58rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted) }
+    .pace-val { font-family: var(--mono); font-size: .88rem; font-weight: 700; color: var(--accent) }
 
-    .proj-name {
-      font-family: var(--mono);
-      font-size: .62rem;
-      letter-spacing: .1em;
-      text-transform: uppercase;
-      color: var(--muted)
-    }
-
-    .proj-top {
-      display: flex;
-      align-items: baseline;
-      gap: .5rem
-    }
-
-    .proj-cur {
-      font-family: var(--mono);
-      font-size: 1.5rem;
-      font-weight: 700;
-      line-height: 1
-    }
-
-    .proj-cur.good {
-      color: var(--success)
-    }
-
-    .proj-cur.warn {
-      color: var(--warn)
-    }
-
-    .proj-cur.bad {
-      color: var(--danger)
-    }
-
-    .proj-cur.neutral {
-      color: var(--dim)
-    }
-
-    .proj-goal-lbl {
-      font-family: var(--mono);
-      font-size: .72rem;
-      color: var(--muted)
-    }
-
-    .proj-bar-wrap {
-      height: 4px;
-      background: var(--border);
-      border-radius: 2px;
-      overflow: hidden
-    }
-
-    .proj-bar {
-      height: 100%;
-      border-radius: 2px;
-      transition: width .4s ease
-    }
-
-    .proj-bar.good {
-      background: var(--success)
-    }
-
-    .proj-bar.warn {
-      background: var(--warn)
-    }
-
-    .proj-bar.bad {
-      background: var(--danger)
-    }
-
-    .proj-insight {
-      font-family: var(--mono);
-      font-size: .68rem;
-      color: var(--dim);
-      line-height: 1.6
-    }
-
-    .proj-insight .hi {
-      color: var(--success);
-      font-weight: 700
-    }
-
-    .proj-insight .lo {
-      color: var(--danger);
-      font-weight: 700
-    }
-
-    .proj-insight .mid {
-      color: var(--warn);
-      font-weight: 700
-    }
-
-    .proj-insight .acc {
-      color: var(--accent);
-      font-weight: 700
-    }
-
-    .proj-proj {
-      font-family: var(--mono);
-      font-size: .68rem;
-      color: var(--accent3);
-      padding-top: .3rem;
-      border-top: 1px solid var(--border);
-      line-height: 1.6
-    }
-
-    .cycle-meta {
-      display: flex;
-      justify-content: space-between;
-      font-family: var(--mono);
-      font-size: .65rem;
-      color: var(--muted);
-      margin-bottom: .35rem
-    }
-
-    .cycle-track {
-      height: 6px;
-      background: var(--border);
-      border-radius: 3px;
-      overflow: hidden;
-      position: relative
-    }
-
-    .cycle-fill {
-      height: 100%;
-      background: var(--accent3);
-      border-radius: 3px;
-      transition: width .4s
-    }
-
-    .pace-strip {
-      display: flex;
-      gap: 1rem;
-      flex-wrap: wrap;
-      padding: .5rem 0 .2rem
-    }
-
-    .pace-item {
-      display: flex;
-      flex-direction: column;
-      gap: .15rem
-    }
-
-    .pace-lbl {
-      font-family: var(--mono);
-      font-size: .58rem;
-      letter-spacing: .08em;
-      text-transform: uppercase;
-      color: var(--muted)
-    }
-
-    .pace-val {
-      font-family: var(--mono);
-      font-size: .88rem;
-      font-weight: 700;
-      color: var(--accent)
-    }
-
-    .logger-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-      gap: .7rem;
-      margin-bottom: .8rem
-    }
+    .logger-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: .7rem; margin-bottom: .8rem }
 
     .logger-card {
       background: var(--raised);
@@ -1080,35 +702,11 @@
       gap: .35rem
     }
 
-    .logger-card.clean {
-      border-color: rgba(34, 197, 94, .25)
-    }
-
-    .logger-card-label {
-      font-family: var(--mono);
-      font-size: .65rem;
-      font-weight: 700;
-      letter-spacing: .08em;
-      text-transform: uppercase;
-      color: var(--text)
-    }
-
-    .logger-card-sub {
-      font-family: var(--mono);
-      font-size: .6rem;
-      color: var(--muted);
-      line-height: 1.4
-    }
-
-    .logger-actions {
-      margin-top: .2rem;
-      display: flex;
-      gap: .4rem
-    }
-
-    .logger-actions-input {
-      flex-wrap: wrap
-    }
+    .logger-card.clean { border-color: rgba(34, 197, 94, .25) }
+    .logger-card-label { font-family: var(--mono); font-size: .65rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text) }
+    .logger-card-sub { font-family: var(--mono); font-size: .6rem; color: var(--muted); line-height: 1.4 }
+    .logger-actions { margin-top: .2rem; display: flex; gap: .4rem }
+    .logger-actions-input { flex-wrap: wrap }
 
     .logger-actions input {
       flex: 1;
@@ -1124,13 +722,8 @@
       transition: border-color .15s
     }
 
-    .logger-actions input:focus {
-      border-color: var(--accent3)
-    }
-
-    .logger-actions input::placeholder {
-      color: var(--muted)
-    }
+    .logger-actions input:focus { border-color: var(--accent3) }
+    .logger-actions input::placeholder { color: var(--muted) }
 
     .log-btn {
       padding: .35rem .7rem;
@@ -1145,40 +738,12 @@
       white-space: nowrap
     }
 
-    .log-btn-good {
-      background: rgba(34, 197, 94, .15);
-      border-color: rgba(34, 197, 94, .4);
-      color: var(--success)
-    }
-
-    .log-btn-bad {
-      background: rgba(239, 68, 68, .12);
-      border-color: rgba(239, 68, 68, .35);
-      color: var(--danger)
-    }
-
-    .log-btn-neutral {
-      background: rgba(77, 159, 255, .12);
-      border-color: rgba(77, 159, 255, .3);
-      color: var(--accent3)
-    }
-
-    .log-btn-undo {
-      background: transparent;
-      border-color: var(--border2);
-      color: var(--muted);
-      font-size: .6rem;
-      padding: .35rem .5rem
-    }
-
-    .log-btn:hover {
-      filter: brightness(1.2);
-      transform: translateY(-1px)
-    }
-
-    .log-btn:active {
-      transform: translateY(0)
-    }
+    .log-btn-good { background: rgba(34, 197, 94, .15); border-color: rgba(34, 197, 94, .4); color: var(--success) }
+    .log-btn-bad { background: rgba(239, 68, 68, .12); border-color: rgba(239, 68, 68, .35); color: var(--danger) }
+    .log-btn-neutral { background: rgba(77, 159, 255, .12); border-color: rgba(77, 159, 255, .3); color: var(--accent3) }
+    .log-btn-undo { background: transparent; border-color: var(--border2); color: var(--muted); font-size: .6rem; padding: .35rem .5rem }
+    .log-btn:hover { filter: brightness(1.2); transform: translateY(-1px) }
+    .log-btn:active { transform: translateY(0) }
 
     .logger-summary {
       display: flex;
@@ -1192,37 +757,12 @@
       min-height: 2.2rem
     }
 
-    .log-sum-item {
-      font-family: var(--mono);
-      font-size: .68rem;
-      color: var(--muted)
-    }
+    .log-sum-item { font-family: var(--mono); font-size: .68rem; color: var(--muted) }
+    .log-sum-item span { font-weight: 700; color: var(--dim) }
+    .log-sum-item span.pos { color: var(--success) }
+    .log-sum-item span.neg { color: var(--danger) }
+    .logger-reset { display: flex; justify-content: flex-end }
 
-    .log-sum-item span {
-      font-weight: 700;
-      color: var(--dim)
-    }
-
-    .log-sum-item span.pos {
-      color: var(--success)
-    }
-
-    .log-sum-item span.neg {
-      color: var(--danger)
-    }
-
-    .logger-reset {
-      display: flex;
-      justify-content: flex-end
-    }
-
-
-    /* ============================================================
-   SCORECARD SCROLL FIX
-   ------------------------------------------------------------
-   These overrides prevent projection cards from clipping and let
-   the full scorecard scroll inside the workspace.
-   ============================================================ */
     #tab-scorecard {
       overflow-y: auto;
       overflow-x: hidden;
@@ -1230,32 +770,11 @@
       min-height: 0;
     }
 
-    #tab-scorecard .panel {
-      flex-shrink: 0;
-      overflow: visible;
-    }
-
-    #tab-scorecard .panel-body {
-      overflow: visible;
-    }
-
-    #tab-scorecard .proj-card {
-      min-height: auto;
-      overflow: visible;
-    }
-
+    #tab-scorecard .panel { flex-shrink: 0; overflow: visible; }
+    #tab-scorecard .panel-body { overflow: visible; }
+    #tab-scorecard .proj-card { min-height: auto; overflow: visible; }
     #tab-scorecard .proj-insight,
-    #tab-scorecard .proj-proj {
-      overflow-wrap: anywhere;
-      word-break: normal;
-    }
-
-    .panel {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      overflow: visible;
-    }
+    #tab-scorecard .proj-proj { overflow-wrap: anywhere; word-break: normal; }
   </style>
 </head>
 
@@ -1314,7 +833,7 @@
       <div class="panel-hdr"><span class="panel-title">Address Splitter</span></div>
       <div class="panel-body">
         <input type="text" class="addr-input" id="addrInput"
-          placeholder="Paste full address — e.g. 123 Main St Apt 2B 80210" autocomplete="off" spellcheck="false">
+          placeholder="Paste full address — e.g. 123 Main St Apt 2B Denver CO 80210" autocomplete="off" spellcheck="false">
         <div class="addr-parts" id="addrParts"></div>
       </div>
     </div>
@@ -1335,7 +854,7 @@
               placeholder="Type a note… press Ctrl+Enter to pin it as a copyable item."></textarea>
             <div class="notes-hint"><kbd>Ctrl</kbd>+<kbd>Enter</kbd> to pin &nbsp;·&nbsp;
               <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Enter</kbd> to calculate &nbsp;·&nbsp;
-              <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Del</kbd> to clear all</div>
+              <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd> to clear all</div>
           </div>
         </div>
       </div>
@@ -1349,9 +868,9 @@
       <div class="panel-hdr"><span class="panel-title">Cycle Settings</span></div>
       <div class="panel-body">
         <div class="sc-config-grid">
-          <div class="sc-field"><label>Cycle Start (MM/DD)</label><input type="text" id="cfgStart" value="04/29"></div>
-          <div class="sc-field"><label>Cycle End (MM/DD)</label><input type="text" id="cfgEnd" value="05/28"></div>
-          <div class="sc-field"><label>Today (MM/DD)</label><input type="text" id="cfgToday" value="05/10"></div>
+          <div class="sc-field"><label>Cycle Start (MM/DD)</label><input type="text" id="cfgStart" placeholder="MM/DD" readonly></div>
+          <div class="sc-field"><label>Cycle End (MM/DD)</label><input type="text" id="cfgEnd" placeholder="MM/DD" readonly></div>
+          <div class="sc-field"><label>Today (MM/DD)</label><input type="text" id="cfgToday" placeholder="MM/DD" readonly></div>
           <div class="sc-field">
             <label>Days Off</label>
             <div class="days-off-wrap" id="daysOff">
@@ -1375,54 +894,49 @@
           <div class="metric-group">
             <label>Staffed Hours &amp; Calls Handled</label>
             <div class="metric-row">
-              <input type="number" id="mHours" value="40" step="0.5" min="0">
+              <input type="number" id="mHours" placeholder="0" step="0.5" min="0">
               <span class="metric-row-label">hrs</span>
-              <input type="number" id="mCalls" value="286" step="1" min="0">
+              <input type="number" id="mCalls" placeholder="0" step="1" min="0">
               <span class="metric-row-label">calls</span>
             </div>
           </div>
           <div class="metric-group">
-            <label>Avg Handle Time — goal &le; <input type="number" id="gAHT" value="430" class="ginline"> s</label>
+            <label>Avg Handle Time — goal &le; <input type="number" id="gAHT" placeholder="0" class="ginline"> s</label>
             <div class="metric-row">
-              <input type="number" id="mAHT" value="349" step="1" min="0">
+              <input type="number" id="mAHT" placeholder="0" step="1" min="0">
               <span class="metric-row-label">seconds (current)</span>
             </div>
           </div>
           <div class="metric-group">
-            <label>Credits/Call — goal &le; <input type="number" id="gCredits" value="0.39" step="0.01"
-                class="ginline"></label>
+            <label>Credits/Call — goal &le; <input type="number" id="gCredits" placeholder="0.00" step="0.01" class="ginline"></label>
             <div class="metric-row">
-              <input type="number" id="mCredits" value="0.55" step="0.01" min="0">
+              <input type="number" id="mCredits" placeholder="0.00" step="0.01" min="0">
               <span class="metric-row-label">per call (current avg)</span>
             </div>
           </div>
           <div class="metric-group">
-            <label>Self-Resolution — goal &ge; <input type="number" id="gSelfRes" value="92.2" step="0.1"
-                class="ginline"> %</label>
+            <label>Self-Resolution — goal &ge; <input type="number" id="gSelfRes" placeholder="0.0" step="0.1" class="ginline"> %</label>
             <div class="metric-row">
-              <input type="number" id="mSelfRes" value="95.8" step="0.1" min="0" max="100">
+              <input type="number" id="mSelfRes" placeholder="0.0" step="0.1" min="0" max="100">
               <span class="metric-row-label">% (current)</span>
             </div>
           </div>
           <div class="metric-group">
-            <label>Sentiment — goal &ge; <input type="number" id="gSentiment" value="75.4" step="0.1" class="ginline">
-              %</label>
+            <label>Sentiment — goal &ge; <input type="number" id="gSentiment" placeholder="0.0" step="0.1" class="ginline"> %</label>
             <div class="metric-row">
-              <input type="number" id="mSentiment" value="83.9" step="0.1" min="0" max="100">
+              <input type="number" id="mSentiment" placeholder="0.0" step="0.1" min="0" max="100">
               <span class="metric-row-label">% (current)</span>
             </div>
           </div>
           <div class="metric-group">
-            <label>Transfer Prevention — goal &ge; <input type="number" id="gXfer" value="77.3" step="0.1"
-                class="ginline"> %</label>
+            <label>Transfer Prevention — goal &ge; <input type="number" id="gXfer" placeholder="0.0" step="0.1" class="ginline"> %</label>
             <div class="metric-row">
-              <input type="number" id="mXfer" value="79.7" step="0.1" min="0" max="100">
+              <input type="number" id="mXfer" placeholder="0.0" step="0.1" min="0" max="100">
               <span class="metric-row-label">% (current)</span>
             </div>
           </div>
           <div class="metric-group" style="opacity:.6">
-            <label>First Call Resolution — goal &ge; <input type="number" id="gFCR" value="0" step="0.1"
-                class="ginline"> %</label>
+            <label>First Call Resolution — goal &ge; <input type="number" id="gFCR" placeholder="0" step="0.1" class="ginline"> %</label>
             <div class="metric-row">
               <input type="number" id="mFCR" step="0.1" min="0" max="100" placeholder="no data">
               <span class="metric-row-label">% (12-day lag)</span>
@@ -1507,30 +1021,14 @@
       </div>
     </div>
 
-  </div><!-- /scorecard -->
+  </div>
 
   <script>
-    /* ============================================================
-       SIDEKICK APP SCRIPT
-       ------------------------------------------------------------
-       This is intentionally framework-free. Each tab owns its own
-       data/state and writes directly to DOM nodes by ID.
-    
-       Main sections:
-       1. Clock
-       2. Tabs
-       3. Channels sorter
-       4. Address splitter
-       5. Notes
-       6. Scorecard + live logger
-       ============================================================ */
     // CLOCK
-    // Keeps the header clock updated once per second.
     function updateClock() { document.getElementById('clock').textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) }
     updateClock(); setInterval(updateClock, 1000);
 
     // TABS
-    // Switches the visible workspace by matching .tab[data-tab] to #tab-{name}.
     document.querySelectorAll('.tab').forEach(tab => {
       tab.addEventListener('click', () => {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -1541,8 +1039,6 @@
     });
 
     // CHANNELS DATA
-    // CATEGORIES defines the official channel groups. AOS_ORDER flattens them
-    // into the final sort order used when copying or displaying the queue.
     const CATEGORIES = [
       { id: 'entertainment', channels: ["Animal Planet", "Cartoon Network", "Disney", "Disney Jr", "Disney XD", "Freeform", "Nickelodeon", "Discovery", "History", "TLC", "TV Land", "A&E", "Aspire", "Bravo", "Food Network", "HGTV", "ID", "Impact", "Nat Geo", "Nat Geo Wild", "SyFy", "Travel Channel", "We TV", "AMC", "BET", "CMT", "Cleo", "Comedy Central", "E", "FX", "FXX", "FX Movie Channel", "Game Show", "Hallmark", "Hallmark Mystery", "Lifetime", "Lifetime Movies", "MTV", "MTV 2", "OWN", "Oxygen", "POP", "Revolt", "Smithsonian", "Paramount", "TBS", "TCM", "TNT", "TV One", "Tru TV", "USA", "VH1"] },
       { id: 'news', channels: ["BBC America", "BBC World News", "TheGrio", "Bloomberg TV", "CNBC", "CNN", "NewsNation Network", "Fox Business", "Fox News", "HLN", "MS NOW", "Weather Channel"] },
@@ -1550,26 +1046,15 @@
       { id: 'espanol', channels: ["BeIN Sports", "BeIN Sports en Espanol", "CNN en Espanol", "Discovery en Espanol", "ESPN Deportes", "Estrella TV", "Fox Deportes", "Galavision", "Unimas", "Univision", "TUDN", "WAPA America"] }
     ];
     const AOS_ORDER = CATEGORIES.flatMap(c => c.channels);
-    // Common shorthand/customer phrasing mapped to official channel names.
     const ALIASES = { "fs1": "Fox Sports 1", "fs 1": "Fox Sports 1", "fox sports 1": "Fox Sports 1", "fs2": "Fox Sports 2", "fs 2": "Fox Sports 2", "fox sports 2": "Fox Sports 2", "espn2": "ESPN 2", "mtv2": "MTV 2", "gameshow": "Game Show", "game show network": "Game Show", "gsn": "Game Show", "wetv": "We TV", "we tv": "We TV", "bein": "BeIN Sports", "bein en espanol": "BeIN Sports en Espanol", "nat geo wild": "Nat Geo Wild", "natgeo wild": "Nat Geo Wild", "national geographic": "Nat Geo", "natgeo": "Nat Geo", "investigation discovery": "ID", "hallmark channel": "Hallmark", "hallmark movies & mysteries": "Hallmark Mystery", "hallmark movies": "Hallmark Mystery", "lmn": "Lifetime Movies", "lifetime movie network": "Lifetime Movies", "tru": "Tru TV", "trutv": "Tru TV", "thegrio": "TheGrio", "freeform": "Freeform", "abc family": "Freeform", "e!": "E", "syfy": "SyFy", "nfl": "NFL Network", "msg": "Madison Square Garden Network", "sny": "SportsNet New York", "yes": "Yankee Entertainment and Sports Network", "yes network": "Yankee Entertainment and Sports Network", "tudn": "TUDN", "univision deportes": "TUDN", "newsnation": "NewsNation Network", "bloomberg": "Bloomberg TV", "msnow": "MS NOW" };
 
-    // Returns the official sort index. Unknown/custom channels sort last.
     function aosIndex(n) { const i = AOS_ORDER.indexOf(n); return i === -1 ? 9999 : i }
-    // Scores how closely a typed query matches a channel name.
-    // Higher score = better match. Supports exact, prefix, contains, acronym,
-    // and loose character-order matching.
     function fuzzyScore(q, t) { q = q.toLowerCase(); t = t.toLowerCase(); if (t === q) return 1000; if (t.startsWith(q)) return 500 + (100 - t.length); if (t.includes(q)) return 200 + (100 - t.indexOf(q)); const words = t.split(/\s+/); for (const w of words) if (w.startsWith(q)) return 150; const acr = words.map(w => w[0]).join(''); if (acr === q) return 120; let qi = 0; for (let ti = 0; ti < t.length && qi < q.length; ti++)if (t[ti] === q[qi]) qi++; if (qi === q.length) return 50; return -1 }
-    // Finds the best official channel match for a user-entered query.
-    // Alias matches win first, then fuzzy scoring is used.
     function bestMatch(q) { if (!q.trim()) return null; const ql = q.trim().toLowerCase(); if (ALIASES[ql]) return ALIASES[ql]; let best = null, bs = -1; for (const ch of AOS_ORDER) { const s = fuzzyScore(ql, ch); if (s > bs) { bs = s; best = ch } } return bs >= 50 ? best : null }
-    // Updates the inline suggestion under the channel input as the user types.
     function updateSuggestion() { const raw = document.getElementById('chTypeInput').value, el = document.getElementById('chSuggestion'), inp = document.getElementById('chTypeInput'); if (!raw.trim()) { el.innerHTML = ''; inp.className = 'ch-type-input'; return } const m = bestMatch(raw); if (m) { const d = selected.includes(m); el.innerHTML = `<span class="ch-suggestion-name">${m}</span><span class="ch-suggestion-hint">${d ? '⚠ already added' : '— press Enter'}</span>`; inp.className = 'ch-type-input match' } else { el.innerHTML = `<span class="ch-suggestion-none">Not on list</span><span class="ch-suggestion-hint" style="color:var(--warn)"> — Enter to add as custom</span>`; inp.className = 'ch-type-input no-match' } }
     let selected = [], customSet = new Set();
-    // Adds a channel to the selected list if the 15-channel cap has not been reached.
     function addChannel(n) { if (selected.length >= 15) return; selected.push(n); renderQueue(); renderBadge() }
-    // Re-renders the selected channel queue in official AOS order.
     function renderQueue() { const q = document.getElementById('chQueue'), sorted = [...selected].sort((a, b) => aosIndex(a) - aosIndex(b)); document.getElementById('dupWarn').classList.toggle('show', new Set(selected).size !== selected.length); if (!sorted.length) { q.innerHTML = '<div class="ch-queue-empty">Type a channel name<br>and press Enter.<br><br>List sorts automatically.</div>'; return } q.innerHTML = ''; sorted.forEach((ch, i) => { const item = document.createElement('div'); item.className = 'ch-queue-item' + (customSet.has(ch) ? ' custom' : ''); const num = document.createElement('span'); num.className = 'ch-queue-num'; num.textContent = i + 1; const name = document.createElement('span'); name.className = 'ch-queue-name'; name.textContent = ch; const del = document.createElement('button'); del.className = 'ch-queue-del'; del.innerHTML = '✕'; del.addEventListener('click', () => { const si = selected.lastIndexOf(ch); if (si !== -1) selected.splice(si, 1); renderQueue(); renderBadge() }); item.appendChild(num); item.appendChild(name); item.appendChild(del); q.appendChild(item) }) }
-    // Updates channel counts and enables/disables the Copy List button.
     function renderBadge() { document.getElementById('ch-badge').textContent = `${selected.length} / 15`; document.getElementById('chCount').textContent = selected.length; document.getElementById('chCopy').disabled = selected.length === 0 }
     const chInp = document.getElementById('chTypeInput');
     chInp.addEventListener('input', updateSuggestion);
@@ -1578,49 +1063,220 @@
     document.getElementById('chClear').addEventListener('click', () => { selected = []; customSet.clear(); chInp.value = ''; chInp.className = 'ch-type-input'; document.getElementById('chSuggestion').innerHTML = ''; renderQueue(); renderBadge() });
     renderQueue(); renderBadge();
 
-    // ADDRESS
-    // Splits a pasted address into copyable parts using lightweight regex parsing.
-    // Attempts to extract ZIP, street number, apartment/unit, and street name.
-    function splitAddress(raw) { const parts = []; let s = raw.trim(); const zipM = s.match(/\b(\d{5})(?:-\d{4})?\s*$/); const zip = zipM ? zipM[1] : ''; if (zipM) s = s.slice(0, zipM.index).trim(); const numM = s.match(/^(\d+\S*)\s+/); const sn = numM ? numM[1] : ''; if (numM) s = s.slice(numM[0].length).trim(); const aptM = s.match(/\b(Apt|Unit|Suite|Ste|#|Lot|Bldg|Fl|Floor)\s*[\w-]+/i); let apt = '', street = s; if (aptM) { apt = aptM[0].trim(); street = (s.slice(0, aptM.index) + s.slice(aptM.index + aptM[0].length)).trim() } if (sn) parts.push({ label: 'Street #', value: sn }); if (street) parts.push({ label: 'Street Name', value: street }); if (apt) parts.push({ label: 'Apt / Unit', value: apt }); if (zip) parts.push({ label: 'ZIP', value: zip }); return parts }
-    // Creates a small reusable copy button for address fields.
-    function makeCopyBtn(v) { const btn = document.createElement('button'); btn.className = 'copy-btn'; btn.textContent = 'Copy'; btn.addEventListener('click', () => { navigator.clipboard.writeText(v).then(() => { btn.textContent = 'Copied!'; btn.classList.add('copied'); setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied') }, 1400) }) }); return btn }
-    // Renders parsed address parts into rows with copy buttons.
-    function renderAddress(raw) { const c = document.getElementById('addrParts'); c.innerHTML = ''; if (!raw.trim()) return; splitAddress(raw).forEach(p => { const row = document.createElement('div'); row.className = 'addr-part'; const lbl = document.createElement('span'); lbl.className = 'addr-part-label'; lbl.textContent = p.label; const val = document.createElement('span'); val.className = 'addr-part-value'; val.textContent = p.value; row.appendChild(lbl); row.appendChild(val); row.appendChild(makeCopyBtn(p.value)); c.appendChild(row) }) }
+    // ADDRESS SPLITTER
+    const STREET_SUFFIX_RE = /\b(St(?:reet)?|Ave(?:nue)?|Blvd|Dr(?:ive)?|Rd|Road|Ln|Lane|Ct|Court|Pl(?:ace)?|Way|Cir(?:cle)?|Hwy|Highway|Pkwy|Parkway|Trl|Trail|Ter(?:race)?|Loop|Run|Pass|Pt|Bend|Glen|Hollow|Ridge|Row|Walk|Sq(?:uare)?|Xing)\b/i;
+    const APT_RE = /\b(Apt\.?|Unit|Suite|Ste\.?|#|Lot|Bldg|Fl(?:oor)?)\s*[\w-]+/i;
+    const US_STATE_RE = /[,\s]+([A-Z]{2})\s*$/;
+
+    function splitAddress(raw) {
+      const parts = [];
+      let s = raw.trim();
+      const zipM = s.match(/\b(\d{5})(?:-\d{4})?\s*$/);
+      const zip = zipM ? zipM[1] : '';
+      if (zipM) s = s.slice(0, zipM.index).trim();
+      const stateM = s.match(US_STATE_RE);
+      const state = stateM ? stateM[1] : '';
+      if (stateM) s = s.slice(0, stateM.index).trim();
+      const aptM = s.match(APT_RE);
+      let apt = '';
+      if (aptM) { apt = aptM[0].trim(); s = (s.slice(0, aptM.index) + s.slice(aptM.index + aptM[0].length)).trim() }
+      let city = '';
+      const suffixMatches = [...s.matchAll(new RegExp(STREET_SUFFIX_RE.source, 'gi'))];
+      if (suffixMatches.length > 0) {
+        const last = suffixMatches[suffixMatches.length - 1];
+        const afterSuffix = s.slice(last.index + last[0].length).trim().replace(/^[,\s]+/, '');
+        if (afterSuffix && !/^\d/.test(afterSuffix)) { city = afterSuffix; s = s.slice(0, last.index + last[0].length).trim() }
+      }
+      const numM = s.match(/^(\d+\S*)\s+/);
+      const sn = numM ? numM[1] : '';
+      if (numM) s = s.slice(numM[0].length).trim();
+      const street = s.trim();
+      if (sn)     parts.push({ label: 'Street #',   value: sn });
+      if (street) parts.push({ label: 'Street Name', value: street });
+      if (apt)    parts.push({ label: 'Apt / Unit',  value: apt });
+      if (city)   parts.push({ label: 'City',        value: city });
+      if (state)  parts.push({ label: 'State',       value: state });
+      if (zip)    parts.push({ label: 'ZIP',         value: zip });
+      return parts;
+    }
+
+    function makeCopyBtn(v) {
+      const btn = document.createElement('button');
+      btn.className = 'copy-btn';
+      btn.textContent = 'Copy';
+      btn.addEventListener('click', () => {
+        navigator.clipboard.writeText(v).then(() => {
+          btn.textContent = 'Copied!'; btn.classList.add('copied');
+          setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied') }, 1400)
+        })
+      });
+      return btn
+    }
+
+    function renderAddress(raw) {
+      const c = document.getElementById('addrParts');
+      c.innerHTML = '';
+      if (!raw.trim()) return;
+      splitAddress(raw).forEach(p => {
+        const row = document.createElement('div'); row.className = 'addr-part';
+        const lbl = document.createElement('span'); lbl.className = 'addr-part-label'; lbl.textContent = p.label;
+        const val = document.createElement('span'); val.className = 'addr-part-value'; val.textContent = p.value;
+        row.appendChild(lbl); row.appendChild(val); row.appendChild(makeCopyBtn(p.value)); c.appendChild(row)
+      })
+    }
+
     document.getElementById('addrInput').addEventListener('input', e => renderAddress(e.target.value));
 
     // NOTES
-    // Pinned notes live only in memory during this page session.
     let pinnedNotes = [];
-    // Detects 10-digit US phone numbers and normalizes 11-digit numbers starting with 1.
     function detectPhone(s) { const d = s.replace(/\D/g, ''); if (d.length === 10) return d; if (d.length === 11 && d[0] === '1') return d.slice(1); return null }
-    // Safely-ish detects simple arithmetic strings and evaluates them.
-    // Note: this intentionally rejects letters and only runs when math operators exist.
     function detectMath(s) { if (!/[+\-*\/]/.test(s)) return null; if (/[a-df-wyzA-DF-WYZ]/.test(s)) return null; try { const r = eval(s); if (typeof r !== 'number' || !isFinite(r)) return null; return `${s} = ${parseFloat(r.toFixed(10))}` } catch (e) { return null } }
-    // Clipboard helper with fallback for browsers that block navigator.clipboard.
     function doClipboard(t, cb) { if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(cb).catch(() => fbCopy(t, cb)); else fbCopy(t, cb) }
-    // Legacy clipboard fallback using a temporary textarea.
     function fbCopy(t, cb) { const ta = document.createElement('textarea'); ta.value = t; ta.style.cssText = 'position:fixed;opacity:0;top:0;left:0'; document.body.appendChild(ta); ta.focus(); ta.select(); try { document.execCommand('copy'); cb() } catch (e) { } document.body.removeChild(ta) }
-    // Re-renders the pinned notes list and applies phone/math display treatments.
-    function renderNotes() { const c = document.getElementById('notesPinned'); c.innerHTML = ''; document.getElementById('noteCount').textContent = `${pinnedNotes.length} pinned`; pinnedNotes.forEach((note, i) => { const phone = detectPhone(note.text), math = note.forceMath ? detectMath(note.text) : null, isPhone = !!phone, isMath = !!math; const item = document.createElement('div'); item.className = 'pinned-item' + (isPhone ? ' pinned-phone' : isMath ? ' pinned-math' : ''); const text = document.createElement('div'); text.className = 'pinned-text'; if (isPhone) text.innerHTML = `<span class="phone-clean">${phone}</span><span class="phone-raw">${note.text}</span>`; else if (isMath) text.innerHTML = `<span class="math-result">${math}</span>`; else text.textContent = note.text; const acts = document.createElement('div'); acts.className = 'pinned-actions'; const cb = document.createElement('button'); cb.className = 'pinned-copy'; cb.textContent = isPhone ? 'Copy #' : 'Copy'; const cv = isPhone ? phone : isMath ? math : note.text; cb.addEventListener('click', () => { doClipboard(cv, () => { cb.textContent = 'Copied!'; cb.classList.add('copied'); setTimeout(() => { cb.textContent = isPhone ? 'Copy #' : 'Copy'; cb.classList.remove('copied') }, 1400) }) }); const db = document.createElement('button'); db.className = 'pinned-del'; db.textContent = '✕'; db.addEventListener('click', () => { pinnedNotes.splice(i, 1); renderNotes() }); acts.appendChild(cb); acts.appendChild(db); item.appendChild(text); item.appendChild(acts); c.appendChild(item) }) }
-    document.getElementById('notesArea').addEventListener('keydown', e => { if (e.ctrlKey && e.shiftKey && e.key === 'Enter') { e.preventDefault(); const v = e.target.value.trim(); if (!v) return; pinnedNotes.unshift({ text: v, forceMath: true }); e.target.value = ''; renderNotes(); return } if (e.ctrlKey && e.key === 'Enter') { e.preventDefault(); const v = e.target.value.trim(); if (!v) return; pinnedNotes.unshift({ text: v, forceMath: false }); e.target.value = ''; renderNotes() } if (e.ctrlKey && e.shiftKey && e.key === 'Delete') { e.preventDefault(); pinnedNotes = []; renderNotes() } });
+    function renderNotes() {
+      const c = document.getElementById('notesPinned');
+      c.innerHTML = '';
+      document.getElementById('noteCount').textContent = `${pinnedNotes.length} pinned`;
+      pinnedNotes.forEach((note, i) => {
+        const phone = detectPhone(note.text);
+        const math = note.forceMath ? detectMath(note.text) : null;
+        const isPhone = !!phone, isMath = !!math;
+        const item = document.createElement('div');
+        item.className = 'pinned-item' + (isPhone ? ' pinned-phone' : isMath ? ' pinned-math' : '');
+        const text = document.createElement('div');
+        text.className = 'pinned-text';
+        if (isPhone) text.innerHTML = `<span class="phone-clean">${phone}</span><span class="phone-raw">${note.text}</span>`;
+        else if (isMath) text.innerHTML = `<span class="math-result">${math}</span>`;
+        else text.textContent = note.text;
+        const acts = document.createElement('div');
+        acts.className = 'pinned-actions';
+        const cb = document.createElement('button');
+        cb.className = 'pinned-copy';
+        cb.textContent = isPhone ? 'Copy #' : 'Copy';
+        const cv = isPhone ? phone : isMath ? math : note.text;
+        cb.addEventListener('click', () => {
+          doClipboard(cv, () => {
+            cb.textContent = 'Copied!'; cb.classList.add('copied');
+            setTimeout(() => { cb.textContent = isPhone ? 'Copy #' : 'Copy'; cb.classList.remove('copied') }, 1400);
+          });
+        });
+        const eb = document.createElement('button');
+        eb.className = 'pinned-edit';
+        eb.textContent = 'Edit';
+        eb.addEventListener('click', () => {
+          item.innerHTML = '';
+          const ta = document.createElement('textarea');
+          ta.className = 'pinned-edit-area';
+          ta.value = note.text;
+          ta.rows = Math.max(1, note.text.split('\n').length);
+          const editActs = document.createElement('div');
+          editActs.className = 'pinned-edit-actions';
+          const saveBtn = document.createElement('button'); saveBtn.className = 'pinned-save'; saveBtn.textContent = 'Save';
+          const cancelBtn = document.createElement('button'); cancelBtn.className = 'pinned-cancel'; cancelBtn.textContent = 'Cancel';
+          saveBtn.addEventListener('click', () => { const newText = ta.value.trim(); if (newText) { pinnedNotes[i].text = newText; } renderNotes(); });
+          cancelBtn.addEventListener('click', () => renderNotes());
+          ta.addEventListener('keydown', e => {
+            if (e.ctrlKey && e.key === 'Enter') { e.preventDefault(); saveBtn.click(); }
+            if (e.key === 'Escape') { e.preventDefault(); cancelBtn.click(); }
+          });
+          editActs.appendChild(saveBtn); editActs.appendChild(cancelBtn);
+          item.appendChild(ta); item.appendChild(editActs);
+          ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length);
+        });
+        const db = document.createElement('button');
+        db.className = 'pinned-del';
+        db.textContent = '✕';
+        db.addEventListener('click', () => { pinnedNotes.splice(i, 1); renderNotes(); });
+        acts.appendChild(cb); acts.appendChild(eb); acts.appendChild(db);
+        item.appendChild(text); item.appendChild(acts);
+        c.appendChild(item);
+      });
+    }
+    document.getElementById('notesArea').addEventListener('keydown', e => {
+      if (e.ctrlKey && e.shiftKey && e.key === 'Enter') {
+        e.preventDefault(); const v = e.target.value.trim(); if (!v) return;
+        pinnedNotes.unshift({ text: v, forceMath: true }); e.target.value = ''; renderNotes(); return;
+      }
+      if (e.ctrlKey && e.key === 'Enter') {
+        e.preventDefault(); const v = e.target.value.trim(); if (!v) return;
+        pinnedNotes.unshift({ text: v, forceMath: false }); e.target.value = ''; renderNotes();
+      }
+      if (e.ctrlKey && e.shiftKey && e.key === 'Z') {
+        e.preventDefault(); pinnedNotes = []; renderNotes();
+      }
+    });
     renderNotes();
 
     // SCORECARD
-    // Cycle math, live logger state, and projection card rendering.
-    let daysOff = new Set([0, 1]);
-    document.querySelectorAll('.day-toggle').forEach(btn => { const d = parseInt(btn.dataset.day); if (daysOff.has(d)) btn.classList.add('active'); btn.addEventListener('click', () => { daysOff.has(d) ? daysOff.delete(d) : daysOff.add(d); btn.classList.toggle('active'); recalc() }) });
-    // Parses MM/DD using the current year.
-    function parseDate(s) { const [m, d] = s.split('/').map(Number); return new Date(new Date().getFullYear(), m - 1, d) }
-    // Counts working days in [from, to), excluding selected days off.
-    function countWorkingDays(from, to) { let c = 0; const cur = new Date(from); while (cur < to) { if (!daysOff.has(cur.getDay())) c++; cur.setDate(cur.getDate() + 1) } return c }
-    // Walks forward by a number of working days and returns the resulting date.
-    // Parameter wr is currently unused but preserved to avoid changing the function signature.
-    function workingDaysUntilGoal(from, wr, extra) { let c = 0; const cur = new Date(from); while (c < extra) { if (!daysOff.has(cur.getDay())) c++; cur.setDate(cur.getDate() + 1) } return cur }
-    // Formats dates as M/DD for compact scorecard messages.
+    let daysOff = new Set();
+    document.querySelectorAll('.day-toggle').forEach(btn => {
+      const d = parseInt(btn.dataset.day);
+      btn.addEventListener('click', () => { daysOff.has(d) ? daysOff.delete(d) : daysOff.add(d); btn.classList.toggle('active'); recalc() })
+    });
+
+    function addDays(date, days) {
+      const d = new Date(date);
+      d.setDate(d.getDate() + days);
+      return d;
+    }
+
+    function getScorecardCycle(today = new Date()) {
+      const y = today.getFullYear();
+      const m = today.getMonth();
+      const day = today.getDate();
+
+      let start, end;
+
+      if (day <= 28) {
+        end = new Date(y, m, 28);
+        start = new Date(y, m - 1, 29);
+
+        // Spectrum cycle normally runs previous-month 29th through current-month 28th.
+        // March is the exception: it starts 03/01 because February does not reliably have a 29th.
+        if (m === 2) start = new Date(y, 2, 1);
+      } else {
+        start = new Date(y, m, 29);
+        end = new Date(y, m + 1, 28);
+      }
+
+      return { start, end, today };
+    }
+
+    function countWorkingDays(from, to) {
+      let c = 0; const cur = new Date(from);
+      while (cur < to) { if (!daysOff.has(cur.getDay())) c++; cur.setDate(cur.getDate() + 1) }
+      return c;
+    }
+
+    // FIXED: advance date before counting so we stop ON the target working day
+    function workingDaysUntilGoal(from, wr, extra) {
+      let c = 0; const cur = new Date(from);
+      while (c < extra) {
+        cur.setDate(cur.getDate() + 1);
+        if (!daysOff.has(cur.getDay())) c++;
+      }
+      return cur;
+    }
+
     function fmtDate(d) { return `${d.getMonth() + 1}/${String(d.getDate()).padStart(2, '0')}` }
+
     let session = { calls: 0, xfers: 0, credits: 0, selfResMiss: 0, todayAHT: null };
-    // Updates the live logger summary strip and session call-count badge.
-    function sessionSummary() { const el = document.getElementById('loggerSummary'), badge = document.getElementById('loggerCallCount'), none = session.calls === 0 && session.xfers === 0 && session.credits === 0 && session.todayAHT === null && session.selfResMiss === 0; if (none) { el.innerHTML = '<span class="log-sum-item" style="color:var(--muted)">No events logged yet this session.</span>'; badge.textContent = '+0 calls this session'; return } badge.textContent = `+${session.calls} call${session.calls !== 1 ? 's' : ''} this session`; const items = [session.calls ? `Calls: <span class="pos">+${session.calls}</span>` : null, session.xfers ? `Transfers: <span class="neg">+${session.xfers}</span>` : null, session.credits ? `Credits: <span class="neg">$${session.credits.toFixed(2)}</span>` : null, session.selfResMiss ? `Self-Res Misses: <span class="neg">+${session.selfResMiss}</span>` : null, session.todayAHT !== null ? `Today's AHT: <span>${session.todayAHT}s</span>` : null].filter(Boolean); el.innerHTML = items.map(i => `<div class="log-sum-item">${i}</div>`).join('') }
+
+    function sessionSummary() {
+      const el = document.getElementById('loggerSummary'), badge = document.getElementById('loggerCallCount');
+      const none = session.calls === 0 && session.xfers === 0 && session.credits === 0 && session.todayAHT === null && session.selfResMiss === 0;
+      if (none) { el.innerHTML = '<span class="log-sum-item" style="color:var(--muted)">No events logged yet this session.</span>'; badge.textContent = '+0 calls this session'; return }
+      badge.textContent = `+${session.calls} call${session.calls !== 1 ? 's' : ''} this session`;
+      const items = [
+        session.calls ? `Calls: <span class="pos">+${session.calls}</span>` : null,
+        session.xfers ? `Transfers: <span class="neg">+${session.xfers}</span>` : null,
+        session.credits ? `Credits: <span class="neg">$${session.credits.toFixed(2)}</span>` : null,
+        session.selfResMiss ? `Self-Res Misses: <span class="neg">+${session.selfResMiss}</span>` : null,
+        session.todayAHT !== null ? `Today's AHT: <span>${session.todayAHT}s</span>` : null
+      ].filter(Boolean);
+      el.innerHTML = items.map(i => `<div class="log-sum-item">${i}</div>`).join('')
+    }
+
     document.getElementById('logClean').addEventListener('click', () => { session.calls++; sessionSummary(); recalc() });
     document.getElementById('undoCall').addEventListener('click', () => { if (session.calls > 0) { session.calls--; sessionSummary(); recalc() } });
     document.getElementById('logXfer').addEventListener('click', () => { session.xfers++; sessionSummary(); recalc() });
@@ -1631,110 +1287,117 @@
     document.getElementById('undoSelfRes').addEventListener('click', () => { if (session.selfResMiss > 0) { session.selfResMiss--; sessionSummary(); recalc() } });
     document.getElementById('logReset').addEventListener('click', () => { session = { calls: 0, xfers: 0, credits: 0, selfResMiss: 0, todayAHT: null }; sessionSummary(); recalc() });
 
-    // Main scorecard recalculation pipeline.
-    // Reads current inputs + session logger state, derives blended metrics,
-    // then rebuilds projection cards from scratch.
     function recalc() {
-      // Read cycle dates and current entered scorecard values.
-      const start = parseDate(document.getElementById('cfgStart').value || '04/29');
-      const end = parseDate(document.getElementById('cfgEnd').value || '05/28');
-      const today = parseDate(document.getElementById('cfgToday').value || '05/10');
-      const baseCalls = parseFloat(document.getElementById('mCalls').value) || 0;
-      const baseCredRate = parseFloat(document.getElementById('mCredits').value) || 0;
-      const baseSelfRes = parseFloat(document.getElementById('mSelfRes').value) || 0;
-      const baseSenti = parseFloat(document.getElementById('mSentiment').value) || 0;
-      const baseXfer = parseFloat(document.getElementById('mXfer').value) || 0;
-      const fcrRaw = document.getElementById('mFCR').value;
-      const fcr = fcrRaw !== '' ? parseFloat(fcrRaw) : null;
-      const gAHT = parseFloat(document.getElementById('gAHT').value) || 430;
-      const gCred = parseFloat(document.getElementById('gCredits').value) || 0.39;
-      const gSelfRes = parseFloat(document.getElementById('gSelfRes').value) || 92.2;
-      const gSenti = parseFloat(document.getElementById('gSentiment').value) || 75.4;
-      const gXfer = parseFloat(document.getElementById('gXfer').value) || 77.3;
-      const gFCR = parseFloat(document.getElementById('gFCR').value) || 0;
-      // Blend baseline scorecard data with this session’s live logger activity.
-      const calls = baseCalls + session.calls;
-      const baseAHT = parseFloat(document.getElementById('mAHT').value) || 0;
-      const aht = (session.todayAHT !== null && session.calls > 0) ? (baseAHT * baseCalls + session.todayAHT * session.calls) / calls : baseAHT;
-      const totalSec = aht * calls;
-      const baseTotalCred = baseCredRate * baseCalls;
-      const totalCred = baseTotalCred + session.credits;
-      const credits = calls > 0 ? totalCred / calls : baseCredRate;
-      const baseGoodSR = Math.round((baseSelfRes / 100) * baseCalls);
-      const sessGoodSR = Math.max(0, session.calls - session.selfResMiss);
-      const selfRes = calls > 0 ? ((baseGoodSR + sessGoodSR) / calls) * 100 : baseSelfRes;
-      const senti = baseSenti;
-      const basePrev = Math.round((baseXfer / 100) * baseCalls);
-      const sessPrev = Math.max(0, session.calls - session.xfers);
-      const xfer = calls > 0 ? ((basePrev + sessPrev) / calls) * 100 : baseXfer;
-      // Cycle progress and call pacing.
-      const wdElapsed = countWorkingDays(start, today);
-      const wdTotal = countWorkingDays(start, end);
-      const wdRemaining = countWorkingDays(today, end);
-      const cyclePct = wdTotal > 0 ? Math.min(100, (wdElapsed / wdTotal) * 100) : 0;
-      const callsPerDay = wdElapsed > 0 ? calls / wdElapsed : 0;
-      const projTotal = calls + (callsPerDay * wdRemaining);
-      document.getElementById('cycleDateRange').textContent = `${fmtDate(start)} → ${fmtDate(end)}`;
-      document.getElementById('cycleDaysInfo').textContent = `${wdElapsed} of ${wdTotal} working days elapsed · ${wdRemaining} remaining`;
-      document.getElementById('cycleBarFill').style.width = cyclePct.toFixed(1) + '%';
-      document.getElementById('paceStrip').innerHTML = [{ label: 'Calls/Day', value: callsPerDay.toFixed(1) }, { label: 'Total Calls', value: calls }, { label: 'Proj. Total Calls', value: Math.round(projTotal) }, { label: 'Working Days Left', value: wdRemaining }, { label: 'Cycle Progress', value: cyclePct.toFixed(0) + '%' }].map(p => `<div class="pace-item"><span class="pace-lbl">${p.label}</span><span class="pace-val">${p.value}</span></div>`).join('');
-      // Projection cards are collected as plain objects, then rendered at the end.
-      const cards = [];
-      { const under = aht <= gAHT; const fn = projTotal - calls; const maxFS = gAHT * projTotal - totalSec; const maxAF = fn > 0 ? maxFS / fn : 0; cards.push({ name: 'Avg Handle Time', current: Math.round(aht) + 's', goal: '≤ ' + gAHT + 's', status: under ? 'good' : 'bad', barPct: Math.min(100, (gAHT / Math.max(aht, 1)) * 100), insight: under ? `<span class="hi">${(gAHT - aht).toFixed(0)}s under goal.</span> Max avg on remaining calls: <span class="acc">${Math.round(maxAF)}s</span>.` : `<span class="lo">${(aht - gAHT).toFixed(0)}s over goal.</span> Remaining calls must avg <span class="mid">${Math.round(maxAF)}s</span>.`, projection: `Blended AHT: ${Math.round(aht)}s across ${calls} calls.` }) }
+      const cycle = getScorecardCycle();
+      const start = cycle.start;
+      const end = cycle.end;
+      const today = cycle.today;
 
-      {
-        // Credits / Call card
-        // This block answers two separate questions:
-        // 1. Where are credits/call right now?
-        // 2. If no more credits are given, when/if the end-of-cycle average reaches goal?
+      document.getElementById('cfgStart').value = fmtDate(start);
+      document.getElementById('cfgEnd').value = fmtDate(end);
+      document.getElementById('cfgToday').value = fmtDate(today);
+
+      // countWorkingDays() treats the second date as exclusive, so this includes the 28th.
+      const endExclusive = addDays(end, 1);
+
+      const baseCalls    = parseFloat(document.getElementById('mCalls').value)    || 0;
+      const baseCredRate = parseFloat(document.getElementById('mCredits').value)  || 0;
+      const baseSelfRes  = parseFloat(document.getElementById('mSelfRes').value)  || 0;
+      const baseSenti    = parseFloat(document.getElementById('mSentiment').value)|| 0;
+      const baseXfer     = parseFloat(document.getElementById('mXfer').value)     || 0;
+      const fcrRaw       = document.getElementById('mFCR').value;
+      const fcr          = fcrRaw !== '' ? parseFloat(fcrRaw) : null;
+      const gAHT         = parseFloat(document.getElementById('gAHT').value)      || 0;
+      const gCred        = parseFloat(document.getElementById('gCredits').value)  || 0;
+      const gSelfRes     = parseFloat(document.getElementById('gSelfRes').value)  || 0;
+      const gSenti       = parseFloat(document.getElementById('gSentiment').value)|| 0;
+      const gXfer        = parseFloat(document.getElementById('gXfer').value)     || 0;
+      const gFCR         = parseFloat(document.getElementById('gFCR').value)      || 0;
+
+      const calls        = baseCalls + session.calls;
+      const baseAHT      = parseFloat(document.getElementById('mAHT').value) || 0;
+      const aht          = (session.todayAHT !== null && session.calls > 0)
+                             ? (baseAHT * baseCalls + session.todayAHT * session.calls) / calls
+                             : baseAHT;
+      const totalSec     = aht * calls;
+      const baseTotalCred = baseCredRate * baseCalls;
+      const totalCred    = baseTotalCred + session.credits;
+      const credits      = calls > 0 ? totalCred / calls : baseCredRate;
+      const baseGoodSR   = Math.round((baseSelfRes / 100) * baseCalls);
+      const sessGoodSR   = Math.max(0, session.calls - session.selfResMiss);
+      const selfRes      = calls > 0 ? ((baseGoodSR + sessGoodSR) / calls) * 100 : baseSelfRes;
+      const senti        = baseSenti;
+      const basePrev     = Math.round((baseXfer / 100) * baseCalls);
+      const sessPrev     = Math.max(0, session.calls - session.xfers);
+      const xfer         = calls > 0 ? ((basePrev + sessPrev) / calls) * 100 : baseXfer;
+
+      const wdElapsed    = countWorkingDays(start, today);
+      const wdTotal      = countWorkingDays(start, endExclusive);
+      const wdRemaining  = countWorkingDays(today, endExclusive);
+      const cyclePct     = wdTotal > 0 ? Math.min(100, (wdElapsed / wdTotal) * 100) : 0;
+      const callsPerDay  = wdElapsed > 0 ? calls / wdElapsed : 0;
+      const projTotal    = calls + (callsPerDay * wdRemaining);
+
+      document.getElementById('cycleDateRange').textContent = `${fmtDate(start)} → ${fmtDate(end)}`;
+      document.getElementById('cycleDaysInfo').textContent  = `${wdElapsed} of ${wdTotal} working days elapsed · ${wdRemaining} remaining`;
+      document.getElementById('cycleBarFill').style.width   = cyclePct.toFixed(1) + '%';
+      document.getElementById('paceStrip').innerHTML = [
+        { label: 'Calls/Day',         value: callsPerDay.toFixed(1) },
+        { label: 'Total Calls',       value: calls },
+        { label: 'Proj. Total Calls', value: Math.round(projTotal) },
+        { label: 'Working Days Left', value: wdRemaining },
+        { label: 'Cycle Progress',    value: cyclePct.toFixed(0) + '%' }
+      ].map(p => `<div class="pace-item"><span class="pace-lbl">${p.label}</span><span class="pace-val">${p.value}</span></div>`).join('');
+
+      const cards = [];
+
+      // AHT
+      if (gAHT > 0) {
+        const under = aht <= gAHT;
+        const fn = projTotal - calls;
+        const maxFS = gAHT * projTotal - totalSec;
+        const maxAF = fn > 0 ? maxFS / fn : 0;
+        cards.push({ name: 'Avg Handle Time', current: Math.round(aht) + 's', goal: '≤ ' + gAHT + 's', status: under ? 'good' : 'bad', barPct: Math.min(100, (gAHT / Math.max(aht, 1)) * 100), insight: under ? `<span class="hi">${(gAHT - aht).toFixed(0)}s under goal.</span> Max avg on remaining calls: <span class="acc">${Math.round(maxAF)}s</span>.` : `<span class="lo">${(aht - gAHT).toFixed(0)}s over goal.</span> Remaining calls must avg <span class="mid">${Math.round(maxAF)}s</span>.`, projection: `Blended AHT: ${Math.round(aht)}s across ${calls} calls.` });
+      }
+
+      // Credits
+      if (gCred > 0) {
         const under = credits <= gCred;
         const rIZ = projTotal > 0 ? totalCred / projTotal : credits;
-
-        let creditGoalDate = null;
-        let daysToCreditGoal = null;
-
+        let creditGoalDate = null, daysToCreditGoal = null;
         if (!under && callsPerDay > 0) {
           const rawDaysNeeded = (totalCred / gCred - calls) / callsPerDay;
           daysToCreditGoal = Math.ceil(rawDaysNeeded);
-
-          if (daysToCreditGoal > 0 && daysToCreditGoal <= wdRemaining) {
-            creditGoalDate = workingDaysUntilGoal(today, wdRemaining, daysToCreditGoal);
-          }
+          if (daysToCreditGoal > 0 && daysToCreditGoal <= wdRemaining) creditGoalDate = workingDaysUntilGoal(today, wdRemaining, daysToCreditGoal);
         }
-
-        cards.push({
-          name: 'Credits / Call',
-          current: credits.toFixed(2),
-          goal: '≤ ' + gCred.toFixed(2),
-          status: under ? 'good' : credits <= gCred * 1.3 ? 'warn' : 'bad',
-          barPct: Math.min(100, (gCred / Math.max(credits, 0.01)) * 100),
-
-          insight: under
-            ? `<span class="hi">At goal.</span> Total credits given: <span class="acc">$${totalCred.toFixed(2)}</span>.`
-            : `Total credits: <span class="mid">$${totalCred.toFixed(2)}</span>. Current trend → end rate ≈ <span class="lo">${credits.toFixed(2)}</span>. At <span class="hi">$0</span> more credits → end rate ≈ <span class="${rIZ <= gCred ? 'hi' : 'lo'}">${rIZ.toFixed(2)}</span>.`,
-
-          projection: under
-            ? `Already at goal. Maintain ≤ $${gCred.toFixed(2)}/call.`
-            : creditGoalDate
-              ? `Based on your average calls, if you give <span class="hi">$0</span> more credits, you should reach goal by <span class="acc">${fmtDate(creditGoalDate)}</span>.`
-              : `Based on your average calls, even at <span class="hi">$0</span> more credits, projected end rate is <span class="${rIZ <= gCred ? 'hi' : 'lo'}">${rIZ.toFixed(2)}</span> — ${rIZ <= gCred ? 'goal should be reachable by cycle end' : 'still above goal by cycle end'}.`
-        });
+        cards.push({ name: 'Credits / Call', current: credits.toFixed(2), goal: '≤ ' + gCred.toFixed(2), status: under ? 'good' : credits <= gCred * 1.3 ? 'warn' : 'bad', barPct: Math.min(100, (gCred / Math.max(credits, 0.01)) * 100), insight: under ? `<span class="hi">At goal.</span> Total credits given: <span class="acc">$${totalCred.toFixed(2)}</span>.` : `Total credits: <span class="mid">$${totalCred.toFixed(2)}</span>. Current trend → end rate ≈ <span class="lo">${credits.toFixed(2)}</span>. At <span class="hi">$0</span> more credits → end rate ≈ <span class="${rIZ <= gCred ? 'hi' : 'lo'}">${rIZ.toFixed(2)}</span>.`, projection: under ? `Already at goal. Maintain ≤ $${gCred.toFixed(2)}/call.` : creditGoalDate ? `Based on your average calls, if you give <span class="hi">$0</span> more credits, you should reach goal by <span class="acc">${fmtDate(creditGoalDate)}</span>.` : `Based on your average calls, even at <span class="hi">$0</span> more credits, projected end rate is <span class="${rIZ <= gCred ? 'hi' : 'lo'}">${rIZ.toFixed(2)}</span> — ${rIZ <= gCred ? 'goal should be reachable by cycle end' : 'still above goal by cycle end'}.` });
       }
 
-      // Shared card builder for percent-based metrics where higher is better.
-      function pctCard(name, current, goal) { const pct = current / 100, gPct = goal / 100, over = current >= goal, goodSoFar = Math.round(pct * calls); if (over) { const maxT = gPct > 0 ? goodSoFar / gPct : Infinity, absorb = Math.max(0, Math.floor(maxT - calls)), pG = goodSoFar + Math.round(pct * callsPerDay * wdRemaining), pR = projTotal > 0 ? (pG / projTotal * 100) : current; return { name, current: current.toFixed(1) + '%', goal: '≥ ' + goal.toFixed(1) + '%', status: 'good', barPct: Math.min(100, (current / (goal * 1.2)) * 100), insight: `<span class="hi">Above goal by ${(current - goal).toFixed(1)}%.</span> Can absorb <span class="acc">${absorb}</span> more failure${absorb !== 1 ? 's' : ''} before dropping below ${goal.toFixed(1)}%.`, projection: `At current pace: end-of-cycle ≈ <span class="acc">${pR.toFixed(1)}%</span>.` } } else { const d100 = (callsPerDay * (1 - gPct)) > 0 ? (gPct * calls - goodSoFar) / (callsPerDay * (1 - gPct)) : Infinity, dR = Math.ceil(d100), reach = isFinite(dR) && dR <= wdRemaining, pG = goodSoFar + Math.round(pct * callsPerDay * wdRemaining), pR = projTotal > 0 ? (pG / projTotal * 100) : current; return { name, current: current.toFixed(1) + '%', goal: '≥ ' + goal.toFixed(1) + '%', status: current >= goal * 0.97 ? 'warn' : 'bad', barPct: Math.min(100, (current / goal) * 100), insight: `<span class="lo">Below goal by ${(goal - current).toFixed(1)}%.</span> Need ${(gPct * 100).toFixed(1)}%+ going forward.`, projection: reach ? `At 100% success: goal in ~<span class="acc">${dR}</span> day${dR !== 1 ? 's' : ''} (~${fmtDate(workingDaysUntilGoal(today, wdRemaining, dR))}). Current pace → ${pR.toFixed(1)}%.` : `Current pace → <span class="lo">${pR.toFixed(1)}%</span>. May not reach goal this cycle.` } } }
-      cards.push(pctCard('Self-Resolution', selfRes, gSelfRes));
-      cards.push(pctCard('Sentiment', senti, gSenti));
-      cards.push(pctCard('Transfer Prevention', xfer, gXfer));
-      if (fcr !== null && gFCR > 0) cards.push(pctCard('First Call Resolution', fcr, gFCR));
-      else cards.push({ name: 'First Call Resolution', current: '—', goal: gFCR > 0 ? '≥ ' + gFCR.toFixed(1) + '%' : 'no goal set', status: 'neutral', barPct: 0, insight: `<span style="color:var(--muted)">No data yet — 12-day reporting lag.</span>`, projection: `Enter FCR % and goal above when data becomes available.` });
-      // Final projection-card render.
+      function pctCard(name, current, goal) {
+        if (!goal) return null;
+        const pct = current / 100, gPct = goal / 100, over = current >= goal, goodSoFar = Math.round(pct * calls);
+        if (over) {
+          const maxT = gPct > 0 ? goodSoFar / gPct : Infinity, absorb = Math.max(0, Math.floor(maxT - calls)), pG = goodSoFar + Math.round(pct * callsPerDay * wdRemaining), pR = projTotal > 0 ? (pG / projTotal * 100) : current;
+          return { name, current: current.toFixed(1) + '%', goal: '≥ ' + goal.toFixed(1) + '%', status: 'good', barPct: Math.min(100, (current / (goal * 1.2)) * 100), insight: `<span class="hi">Above goal by ${(current - goal).toFixed(1)}%.</span> Can absorb <span class="acc">${absorb}</span> more failure${absorb !== 1 ? 's' : ''} before dropping below ${goal.toFixed(1)}%.`, projection: `At current pace: end-of-cycle ≈ <span class="acc">${pR.toFixed(1)}%</span>.` }
+        } else {
+          const d100 = (callsPerDay * (1 - gPct)) > 0 ? (gPct * calls - goodSoFar) / (callsPerDay * (1 - gPct)) : Infinity, dR = Math.ceil(d100), reach = isFinite(dR) && dR <= wdRemaining, pG = goodSoFar + Math.round(pct * callsPerDay * wdRemaining), pR = projTotal > 0 ? (pG / projTotal * 100) : current;
+          return { name, current: current.toFixed(1) + '%', goal: '≥ ' + goal.toFixed(1) + '%', status: current >= goal * 0.97 ? 'warn' : 'bad', barPct: Math.min(100, (current / goal) * 100), insight: `<span class="lo">Below goal by ${(goal - current).toFixed(1)}%.</span> Need ${(gPct * 100).toFixed(1)}%+ going forward.`, projection: reach ? `At 100% success: goal in ~<span class="acc">${dR}</span> day${dR !== 1 ? 's' : ''} (~${fmtDate(workingDaysUntilGoal(today, wdRemaining, dR))}). Current pace → ${pR.toFixed(1)}%.` : `Current pace → <span class="lo">${pR.toFixed(1)}%</span>. May not reach goal this cycle.` }
+        }
+      }
+
+      [
+        pctCard('Self-Resolution',     selfRes, gSelfRes),
+        pctCard('Sentiment',           senti,   gSenti),
+        pctCard('Transfer Prevention', xfer,    gXfer),
+        fcr !== null && gFCR > 0 ? pctCard('First Call Resolution', fcr, gFCR) : { name: 'First Call Resolution', current: '—', goal: gFCR > 0 ? '≥ ' + gFCR.toFixed(1) + '%' : 'no goal set', status: 'neutral', barPct: 0, insight: `<span style="color:var(--muted)">No data yet — 12-day reporting lag.</span>`, projection: `Enter FCR % and goal above when data becomes available.` }
+      ].filter(Boolean).forEach(c => cards.push(c));
+
       document.getElementById('projectionsGrid').innerHTML = cards.map(c => `<div class="proj-card ${c.status}"><div class="proj-name">${c.name}</div><div class="proj-top"><div class="proj-cur ${c.status}">${c.current}</div><div class="proj-goal-lbl">goal ${c.goal}</div></div><div class="proj-bar-wrap"><div class="proj-bar ${c.status}" style="width:${Math.min(100, c.barPct).toFixed(1)}%"></div></div><div class="proj-insight">${c.insight}</div><div class="proj-proj">${c.projection}</div></div>`).join('');
     }
+
     document.querySelectorAll('#tab-scorecard input').forEach(el => el.addEventListener('input', recalc));
     sessionSummary();
     recalc();
   </script>
 </body>
-
 </html>
