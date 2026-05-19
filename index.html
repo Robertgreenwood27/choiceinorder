@@ -1070,19 +1070,18 @@
 
     function splitAddress(raw) {
   const parts = [];
-  let s = raw.trim();
+  // Normalize newlines/extra whitespace first
+  let s = raw.trim().replace(/\r\n|\r|\n/g, ' ').replace(/\s+/g, ' ');
 
-  // 1. Extract ZIP
   const zipM = s.match(/\b(\d{5})(?:-\d{4})?\s*$/);
   const zip = zipM ? zipM[1] : '';
   if (zipM) s = s.slice(0, zipM.index).trim().replace(/,\s*$/, '');
 
-  // 2. Extract state (2-letter at end, possibly after comma/space)
-  const stateM = s.match(/(?:,|\s)\s*([A-Z]{2})\s*$/);
-  const state = stateM ? stateM[1] : '';
+  // Case-insensitive state match, normalize to uppercase
+  const stateM = s.match(/(?:,|\s)\s*([A-Za-z]{2})\s*$/);
+  const state = stateM ? stateM[1].toUpperCase() : '';
   if (stateM) s = s.slice(0, stateM.index).trim().replace(/,\s*$/, '');
 
-  // 3. Extract apt/unit (before we look for suffix)
   const APT_RE = /\b(Apt\.?|Unit|Suite|Ste\.?|#|Lot|Bldg|Fl(?:oor)?)\s*[\w-]+/i;
   const aptM = s.match(APT_RE);
   let apt = '';
@@ -1091,8 +1090,6 @@
     s = (s.slice(0, aptM.index) + s.slice(aptM.index + aptM[0].length)).trim().replace(/,\s*$/, '');
   }
 
-  // 4. Find the LAST street suffix and split city from street there
-  //    Match the suffix as a whole word, capturing everything after it as city
   const SUFFIX_PAT = /\b(St(?:reet)?|Ave(?:nue)?|Blvd|Dr(?:ive)?|Rd|Road|Ln|Lane|Ct|Court|Pl(?:ace)?|Way|Cir(?:cle)?|Hwy|Highway|Pkwy|Parkway|Trl|Trail|Ter(?:race)?|Loop|Run|Pass|Pt|Bend|Glen|Hollow|Ridge|Row|Walk|Sq(?:uare)?|Xing)\b/gi;
   const allMatches = [...s.matchAll(SUFFIX_PAT)];
   let city = '';
@@ -1100,26 +1097,19 @@
   if (allMatches.length > 0) {
     const last = allMatches[allMatches.length - 1];
     const suffixEnd = last.index + last[0].length;
-    // Everything after the suffix (strip leading comma/space) is city
     const afterSuffix = s.slice(suffixEnd).trim().replace(/^[,\s]+/, '');
     if (afterSuffix && !/^\d/.test(afterSuffix)) {
       city = afterSuffix;
       s = s.slice(0, suffixEnd).trim();
     }
   } else {
-    // No suffix found — try comma split: last comma-segment before state/zip is city
     const commaM = s.match(/^(.+),\s*([^,]+)$/);
-    if (commaM) {
-      city = commaM[2].trim();
-      s = commaM[1].trim();
-    }
+    if (commaM) { city = commaM[2].trim(); s = commaM[1].trim(); }
   }
 
-  // 5. Extract street number (leading digits/alphanumeric like 123 or 12B)
   const numM = s.match(/^(\d+\S*)\s+/);
   const sn = numM ? numM[1] : '';
   if (numM) s = s.slice(numM[0].length).trim();
-
   const street = s.trim();
 
   if (sn)     parts.push({ label: 'Street #',   value: sn });
@@ -1130,6 +1120,7 @@
   if (zip)    parts.push({ label: 'ZIP',         value: zip });
   return parts;
 }
+
 
     function makeCopyBtn(v) {
       const btn = document.createElement('button');
