@@ -1069,36 +1069,67 @@
     const US_STATE_RE = /[,\s]+([A-Z]{2})\s*$/;
 
     function splitAddress(raw) {
-      const parts = [];
-      let s = raw.trim();
-      const zipM = s.match(/\b(\d{5})(?:-\d{4})?\s*$/);
-      const zip = zipM ? zipM[1] : '';
-      if (zipM) s = s.slice(0, zipM.index).trim();
-      const stateM = s.match(US_STATE_RE);
-      const state = stateM ? stateM[1] : '';
-      if (stateM) s = s.slice(0, stateM.index).trim();
-      const aptM = s.match(APT_RE);
-      let apt = '';
-      if (aptM) { apt = aptM[0].trim(); s = (s.slice(0, aptM.index) + s.slice(aptM.index + aptM[0].length)).trim() }
-      let city = '';
-      const suffixMatches = [...s.matchAll(new RegExp(STREET_SUFFIX_RE.source, 'gi'))];
-      if (suffixMatches.length > 0) {
-        const last = suffixMatches[suffixMatches.length - 1];
-        const afterSuffix = s.slice(last.index + last[0].length).trim().replace(/^[,\s]+/, '');
-        if (afterSuffix && !/^\d/.test(afterSuffix)) { city = afterSuffix; s = s.slice(0, last.index + last[0].length).trim() }
-      }
-      const numM = s.match(/^(\d+\S*)\s+/);
-      const sn = numM ? numM[1] : '';
-      if (numM) s = s.slice(numM[0].length).trim();
-      const street = s.trim();
-      if (sn)     parts.push({ label: 'Street #',   value: sn });
-      if (street) parts.push({ label: 'Street Name', value: street });
-      if (apt)    parts.push({ label: 'Apt / Unit',  value: apt });
-      if (city)   parts.push({ label: 'City',        value: city });
-      if (state)  parts.push({ label: 'State',       value: state });
-      if (zip)    parts.push({ label: 'ZIP',         value: zip });
-      return parts;
+  const parts = [];
+  let s = raw.trim();
+
+  // 1. Extract ZIP
+  const zipM = s.match(/\b(\d{5})(?:-\d{4})?\s*$/);
+  const zip = zipM ? zipM[1] : '';
+  if (zipM) s = s.slice(0, zipM.index).trim().replace(/,\s*$/, '');
+
+  // 2. Extract state (2-letter at end, possibly after comma/space)
+  const stateM = s.match(/(?:,|\s)\s*([A-Z]{2})\s*$/);
+  const state = stateM ? stateM[1] : '';
+  if (stateM) s = s.slice(0, stateM.index).trim().replace(/,\s*$/, '');
+
+  // 3. Extract apt/unit (before we look for suffix)
+  const APT_RE = /\b(Apt\.?|Unit|Suite|Ste\.?|#|Lot|Bldg|Fl(?:oor)?)\s*[\w-]+/i;
+  const aptM = s.match(APT_RE);
+  let apt = '';
+  if (aptM) {
+    apt = aptM[0].trim();
+    s = (s.slice(0, aptM.index) + s.slice(aptM.index + aptM[0].length)).trim().replace(/,\s*$/, '');
+  }
+
+  // 4. Find the LAST street suffix and split city from street there
+  //    Match the suffix as a whole word, capturing everything after it as city
+  const SUFFIX_PAT = /\b(St(?:reet)?|Ave(?:nue)?|Blvd|Dr(?:ive)?|Rd|Road|Ln|Lane|Ct|Court|Pl(?:ace)?|Way|Cir(?:cle)?|Hwy|Highway|Pkwy|Parkway|Trl|Trail|Ter(?:race)?|Loop|Run|Pass|Pt|Bend|Glen|Hollow|Ridge|Row|Walk|Sq(?:uare)?|Xing)\b/gi;
+  const allMatches = [...s.matchAll(SUFFIX_PAT)];
+  let city = '';
+
+  if (allMatches.length > 0) {
+    const last = allMatches[allMatches.length - 1];
+    const suffixEnd = last.index + last[0].length;
+    // Everything after the suffix (strip leading comma/space) is city
+    const afterSuffix = s.slice(suffixEnd).trim().replace(/^[,\s]+/, '');
+    if (afterSuffix && !/^\d/.test(afterSuffix)) {
+      city = afterSuffix;
+      s = s.slice(0, suffixEnd).trim();
     }
+  } else {
+    // No suffix found — try comma split: last comma-segment before state/zip is city
+    const commaM = s.match(/^(.+),\s*([^,]+)$/);
+    if (commaM) {
+      city = commaM[2].trim();
+      s = commaM[1].trim();
+    }
+  }
+
+  // 5. Extract street number (leading digits/alphanumeric like 123 or 12B)
+  const numM = s.match(/^(\d+\S*)\s+/);
+  const sn = numM ? numM[1] : '';
+  if (numM) s = s.slice(numM[0].length).trim();
+
+  const street = s.trim();
+
+  if (sn)     parts.push({ label: 'Street #',   value: sn });
+  if (street) parts.push({ label: 'Street Name', value: street });
+  if (apt)    parts.push({ label: 'Apt / Unit',  value: apt });
+  if (city)   parts.push({ label: 'City',        value: city });
+  if (state)  parts.push({ label: 'State',       value: state });
+  if (zip)    parts.push({ label: 'ZIP',         value: zip });
+  return parts;
+}
 
     function makeCopyBtn(v) {
       const btn = document.createElement('button');
@@ -1381,7 +1412,9 @@
           return { name, current: current.toFixed(1) + '%', goal: '≥ ' + goal.toFixed(1) + '%', status: 'good', barPct: Math.min(100, (current / (goal * 1.2)) * 100), insight: `<span class="hi">Above goal by ${(current - goal).toFixed(1)}%.</span> Can absorb <span class="acc">${absorb}</span> more failure${absorb !== 1 ? 's' : ''} before dropping below ${goal.toFixed(1)}%.`, projection: `At current pace: end-of-cycle ≈ <span class="acc">${pR.toFixed(1)}%</span>.` }
         } else {
           const d100 = (callsPerDay * (1 - gPct)) > 0 ? (gPct * calls - goodSoFar) / (callsPerDay * (1 - gPct)) : Infinity, dR = Math.ceil(d100), reach = isFinite(dR) && dR <= wdRemaining, pG = goodSoFar + Math.round(pct * callsPerDay * wdRemaining), pR = projTotal > 0 ? (pG / projTotal * 100) : current;
-          return { name, current: current.toFixed(1) + '%', goal: '≥ ' + goal.toFixed(1) + '%', status: current >= goal * 0.97 ? 'warn' : 'bad', barPct: Math.min(100, (current / goal) * 100), insight: `<span class="lo">Below goal by ${(goal - current).toFixed(1)}%.</span> Need ${(gPct * 100).toFixed(1)}%+ going forward.`, projection: reach ? `At 100% success: goal in ~<span class="acc">${dR}</span> day${dR !== 1 ? 's' : ''} (~${fmtDate(workingDaysUntilGoal(today, wdRemaining, dR))}). Current pace → ${pR.toFixed(1)}%.` : `Current pace → <span class="lo">${pR.toFixed(1)}%</span>. May not reach goal this cycle.` }
+          const cleanNeeded = gPct < 1 ? Math.ceil((gPct * calls - goodSoFar) / (1 - gPct)) : Infinity;
+          const cleanStr = isFinite(cleanNeeded) && cleanNeeded > 0 ? ` Need <span class="acc">${cleanNeeded}</span> consecutive clean call${cleanNeeded !== 1 ? 's' : ''} to reach goal.` : '';
+          return { name, current: current.toFixed(1) + '%', goal: '≥ ' + goal.toFixed(1) + '%', status: current >= goal * 0.97 ? 'warn' : 'bad', barPct: Math.min(100, (current / goal) * 100), insight: `<span class="lo">Below goal by ${(goal - current).toFixed(1)}%.</span>${cleanStr}`, projection: reach ? `At 100% success: goal in ~<span class="acc">${dR}</span> day${dR !== 1 ? 's' : ''} (~${fmtDate(workingDaysUntilGoal(today, wdRemaining, dR))}). Current pace → ${pR.toFixed(1)}%.` : `Current pace → <span class="lo">${pR.toFixed(1)}%</span>. May not reach goal this cycle.` }
         }
       }
 
