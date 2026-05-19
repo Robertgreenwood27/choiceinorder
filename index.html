@@ -1070,14 +1070,12 @@
 
     function splitAddress(raw) {
   const parts = [];
-  // Normalize newlines/extra whitespace first
   let s = raw.trim().replace(/\r\n|\r|\n/g, ' ').replace(/\s+/g, ' ');
 
   const zipM = s.match(/\b(\d{5})(?:-\d{4})?\s*$/);
   const zip = zipM ? zipM[1] : '';
   if (zipM) s = s.slice(0, zipM.index).trim().replace(/,\s*$/, '');
 
-  // Case-insensitive state match, normalize to uppercase
   const stateM = s.match(/(?:,|\s)\s*([A-Za-z]{2})\s*$/);
   const state = stateM ? stateM[1].toUpperCase() : '';
   if (stateM) s = s.slice(0, stateM.index).trim().replace(/,\s*$/, '');
@@ -1090,19 +1088,91 @@
     s = (s.slice(0, aptM.index) + s.slice(aptM.index + aptM[0].length)).trim().replace(/,\s*$/, '');
   }
 
-  const SUFFIX_PAT = /\b(St(?:reet)?|Ave(?:nue)?|Blvd|Dr(?:ive)?|Rd|Road|Ln|Lane|Ct|Court|Pl(?:ace)?|Way|Cir(?:cle)?|Hwy|Highway|Pkwy|Parkway|Trl|Trail|Ter(?:race)?|Loop|Run|Pass|Pt|Bend|Glen|Hollow|Ridge|Row|Walk|Sq(?:uare)?|Xing)\b/gi;
+  const suffixes = [
+    'Alley','Aly','Anex','Anx','Arc','Arcade',
+    'Avenue','Ave',
+    'Bayou','Byu','Beach','Bch','Bend','Bnd',
+    'Bluff','Blf','Boulevard','Blvd',
+    'Bottom','Btm','Branch','Br','Bridge','Brg',
+    'Brook','Brk','Bypass','Byp',
+    'Camp','Cp','Canyon','Cyn','Cape','Cpe',
+    'Causeway','Cswy','Center','Ctr','Cen',
+    'Circle','Cir','Cliff','Clf',
+    'Club','Clb','Common','Cmn',
+    'Corner','Cor','Corners','Cors',
+    'Course','Crse','Court','Ct','Courts','Cts',
+    'Cove','Cv','Creek','Crk',
+    'Crescent','Cres','Crest','Crst',
+    'Crossing','Xing','Curve','Curv',
+    'Dale','Dl','Dam','Dm','Divide','Div',
+    'Drive','Dr',
+    'Estates','Estate','Est',
+    'Expressway','Expy','Extension','Ext',
+    'Falls','Fall','Fls','Ford','Frd',
+    'Forge','Frg','Forks','Fork','Frk','Frks',
+    'Freeway','Fwy',
+    'Gardens','Garden','Gdns','Gdn',
+    'Gateway','Gtwy','Glen','Gln',
+    'Green','Grn','Grove','Grv',
+    'Harbor','Hbr','Haven','Hvn',
+    'Heights','Hgts','Hts','Highway','Hwy',
+    'Hills','Hill','Hls','Hollow','Holw',
+    'Inlet','Inlt','Island','Is','Isle',
+    'Junction','Jct','Key','Ky','Knoll','Knl',
+    'Lake','Lk','Lane','Ln','Landing','Lndg',
+    'Light','Lgt','Loop','Mall',
+    'Manor','Mnr','Meadows','Meadow','Mdws','Mdw',
+    'Mews','Mills','Mill','Mls','Ml',
+    'Mission','Msn',
+    'Mountain','Mtn','Mount','Mt',
+    'Motorway','Mtwy','Neck','Nck',
+    'Orchard','Orch','Oval','Ovl','Overlook','Ovlk',
+    'Parkway','Pkwy','Pky','Park','Pk',
+    'Pass','Path','Pike','Pke',
+    'Pines','Pine','Pnes','Pne',
+    'Place','Pl','Plains','Plain','Plns','Pln',
+    'Plaza','Plz','Points','Point','Pts','Pt',
+    'Port','Prt','Prairie','Pr','Promenade',
+    'Radial','Rad','Ramp','Ranch','Rnch',
+    'Rapid','Rpd','Ridge','Rdg','River','Riv',
+    'Road','Rd','Row','Rue','Run',
+    'Shoals','Shoal','Shls','Shl',
+    'Shore','Shr','Skyway','Skwy',
+    'Springs','Spring','Spgs','Spg',
+    'Spur','Square','Sq','Station','Sta',
+    'Stravenue','Stra','Stream','Strm',
+    'Street','St','Summit','Smt',
+    'Terrace','Ter',
+    'Throughway','Trwy','Turnpike','Tpke',
+    'Trace','Trce','Track','Trak',
+    'Trail','Trl','Trailer','Trlr',
+    'Tunnel','Tunn','Union','Un',
+    'Valley','Vly','Via',
+    'View','Vw','Village','Vlg','Vista','Vis',
+    'Walk','Wall','Way',
+    'Wells','Well','Wls','Wl','Wye'
+  ];
+  const sorted = [...suffixes].sort((a, b) => b.length - a.length);
+  const SUFFIX_PAT = new RegExp('\\b(' + sorted.map(x => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')\\b', 'gi');
+
   const allMatches = [...s.matchAll(SUFFIX_PAT)];
   let city = '';
 
-  if (allMatches.length > 0) {
-    const last = allMatches[allMatches.length - 1];
-    const suffixEnd = last.index + last[0].length;
-    const afterSuffix = s.slice(suffixEnd).trim().replace(/^[,\s]+/, '');
-    if (afterSuffix && !/^\d/.test(afterSuffix)) {
-      city = afterSuffix;
-      s = s.slice(0, suffixEnd).trim();
-    }
-  } else {
+  // Walk matches from the end, take the last one that actually has city text after it.
+  // This prevents suffix words embedded in city names (e.g. "Springs" in "Colorado Springs",
+  // "Bend" in "Bend OR") from being mistaken for the street/city split point.
+  let chosenMatch = null;
+  for (let i = allMatches.length - 1; i >= 0; i--) {
+    const m = allMatches[i];
+    const after = s.slice(m.index + m[0].length).trim().replace(/^[,\s]+/, '');
+    if (after && !/^\d/.test(after)) { chosenMatch = m; break; }
+  }
+
+  if (chosenMatch) {
+    const suffixEnd = chosenMatch.index + chosenMatch[0].length;
+    city = s.slice(suffixEnd).trim().replace(/^[,\s]+/, '');
+    s = s.slice(0, suffixEnd).trim();
+  } else if (allMatches.length === 0) {
     const commaM = s.match(/^(.+),\s*([^,]+)$/);
     if (commaM) { city = commaM[2].trim(); s = commaM[1].trim(); }
   }
@@ -1120,7 +1190,6 @@
   if (zip)    parts.push({ label: 'ZIP',         value: zip });
   return parts;
 }
-
 
     function makeCopyBtn(v) {
       const btn = document.createElement('button');
