@@ -808,8 +808,7 @@
                 placeholder="Type a channel, press Enter to add…" autocomplete="off" spellcheck="false" autofocus>
             </div>
             <div class="ch-suggestion" id="chSuggestion"></div>
-            <div class="ch-hint"><kbd>Enter</kbd> to add &nbsp;·&nbsp; <kbd>Backspace</kbd> on empty to undo last
-              &nbsp;·&nbsp; partial names work</div>
+            <div class="ch-hint"><kbd>Enter</kbd> to add &nbsp;·&nbsp; <kbd>Ctrl</kbd>+<kbd>Z</kbd> to undo Clear All &nbsp;·&nbsp; partial names work</div>
           </div>
           <div class="ch-right">
             <div class="dup-warn" id="dupWarn">⚠ Duplicate detected</div>
@@ -1052,144 +1051,132 @@
     function fuzzyScore(q, t) { q = q.toLowerCase(); t = t.toLowerCase(); if (t === q) return 1000; if (t.startsWith(q)) return 500 + (100 - t.length); if (t.includes(q)) return 200 + (100 - t.indexOf(q)); const words = t.split(/\s+/); for (const w of words) if (w.startsWith(q)) return 150; const acr = words.map(w => w[0]).join(''); if (acr === q) return 120; let qi = 0; for (let ti = 0; ti < t.length && qi < q.length; ti++)if (t[ti] === q[qi]) qi++; if (qi === q.length) return 50; return -1 }
     function bestMatch(q) { if (!q.trim()) return null; const ql = q.trim().toLowerCase(); if (ALIASES[ql]) return ALIASES[ql]; let best = null, bs = -1; for (const ch of AOS_ORDER) { const s = fuzzyScore(ql, ch); if (s > bs) { bs = s; best = ch } } return bs >= 50 ? best : null }
     function updateSuggestion() { const raw = document.getElementById('chTypeInput').value, el = document.getElementById('chSuggestion'), inp = document.getElementById('chTypeInput'); if (!raw.trim()) { el.innerHTML = ''; inp.className = 'ch-type-input'; return } const m = bestMatch(raw); if (m) { const d = selected.includes(m); el.innerHTML = `<span class="ch-suggestion-name">${m}</span><span class="ch-suggestion-hint">${d ? '⚠ already added' : '— press Enter'}</span>`; inp.className = 'ch-type-input match' } else { el.innerHTML = `<span class="ch-suggestion-none">Not on list</span><span class="ch-suggestion-hint" style="color:var(--warn)"> — Enter to add as custom</span>`; inp.className = 'ch-type-input no-match' } }
+
     let selected = [], customSet = new Set();
+    // Snapshot saved before Clear All — restored by Ctrl+Z
+    let clearedSnapshot = null, clearedCustomSnapshot = null;
+
     function addChannel(n) { if (selected.length >= 15) return; selected.push(n); renderQueue(); renderBadge() }
     function renderQueue() { const q = document.getElementById('chQueue'), sorted = [...selected].sort((a, b) => aosIndex(a) - aosIndex(b)); document.getElementById('dupWarn').classList.toggle('show', new Set(selected).size !== selected.length); if (!sorted.length) { q.innerHTML = '<div class="ch-queue-empty">Type a channel name<br>and press Enter.<br><br>List sorts automatically.</div>'; return } q.innerHTML = ''; sorted.forEach((ch, i) => { const item = document.createElement('div'); item.className = 'ch-queue-item' + (customSet.has(ch) ? ' custom' : ''); const num = document.createElement('span'); num.className = 'ch-queue-num'; num.textContent = i + 1; const name = document.createElement('span'); name.className = 'ch-queue-name'; name.textContent = ch; const del = document.createElement('button'); del.className = 'ch-queue-del'; del.innerHTML = '✕'; del.addEventListener('click', () => { const si = selected.lastIndexOf(ch); if (si !== -1) selected.splice(si, 1); renderQueue(); renderBadge() }); item.appendChild(num); item.appendChild(name); item.appendChild(del); q.appendChild(item) }) }
     function renderBadge() { document.getElementById('ch-badge').textContent = `${selected.length} / 15`; document.getElementById('chCount').textContent = selected.length; document.getElementById('chCopy').disabled = selected.length === 0 }
+
     const chInp = document.getElementById('chTypeInput');
     chInp.addEventListener('input', updateSuggestion);
-    chInp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); const raw = chInp.value.trim(); if (!raw || selected.length >= 15) return; const m = bestMatch(raw); if (m) addChannel(m); else { customSet.add(raw); addChannel(raw) } chInp.value = ''; chInp.className = 'ch-type-input'; document.getElementById('chSuggestion').innerHTML = '' } if (e.key === 'Backspace' && chInp.value === '' && selected.length > 0) { const r = selected.pop(); customSet.delete(r); renderQueue(); renderBadge() } });
-    document.getElementById('chCopy').addEventListener('click', () => { const sorted = [...selected].sort((a, b) => aosIndex(a) - aosIndex(b)); navigator.clipboard.writeText(sorted.join(', ')).then(() => { const btn = document.getElementById('chCopy'); btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = 'Copy List', 1500) }) });
-    document.getElementById('chClear').addEventListener('click', () => { selected = []; customSet.clear(); chInp.value = ''; chInp.className = 'ch-type-input'; document.getElementById('chSuggestion').innerHTML = ''; renderQueue(); renderBadge() });
+    chInp.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const raw = chInp.value.trim();
+        if (!raw || selected.length >= 15) return;
+        const m = bestMatch(raw);
+        if (m) addChannel(m);
+        else { customSet.add(raw); addChannel(raw) }
+        chInp.value = '';
+        chInp.className = 'ch-type-input';
+        document.getElementById('chSuggestion').innerHTML = '';
+      }
+      // Backspace-to-undo-last-channel intentionally removed
+    });
+
+    document.getElementById('chCopy').addEventListener('click', () => {
+      const sorted = [...selected].sort((a, b) => aosIndex(a) - aosIndex(b));
+      navigator.clipboard.writeText(sorted.join(', ')).then(() => {
+        const btn = document.getElementById('chCopy');
+        btn.textContent = 'Copied!';
+        setTimeout(() => btn.textContent = 'Copy List', 1500);
+      });
+    });
+
+    document.getElementById('chClear').addEventListener('click', () => {
+      // Snapshot the current list so Ctrl+Z can restore it
+      clearedSnapshot = [...selected];
+      clearedCustomSnapshot = new Set(customSet);
+      selected = [];
+      customSet.clear();
+      chInp.value = '';
+      chInp.className = 'ch-type-input';
+      document.getElementById('chSuggestion').innerHTML = '';
+      renderQueue();
+      renderBadge();
+    });
+
+    // Ctrl+Z on the Channels tab restores the last Clear All,
+    // but only when focus is NOT inside a text field (let the browser handle native undo there).
+    document.addEventListener('keydown', e => {
+      if (e.ctrlKey && !e.shiftKey && e.key === 'z') {
+        const channelsActive = document.getElementById('tab-channels').classList.contains('active');
+        const tag = document.activeElement ? document.activeElement.tagName : '';
+        if (channelsActive && tag !== 'INPUT' && tag !== 'TEXTAREA') {
+          if (clearedSnapshot !== null) {
+            e.preventDefault();
+            selected = [...clearedSnapshot];
+            customSet = new Set(clearedCustomSnapshot);
+            clearedSnapshot = null;
+            clearedCustomSnapshot = null;
+            renderQueue();
+            renderBadge();
+          }
+        }
+      }
+    });
+
     renderQueue(); renderBadge();
 
     // ADDRESS SPLITTER
-    const STREET_SUFFIX_RE = /\b(St(?:reet)?|Ave(?:nue)?|Blvd|Dr(?:ive)?|Rd|Road|Ln|Lane|Ct|Court|Pl(?:ace)?|Way|Cir(?:cle)?|Hwy|Highway|Pkwy|Parkway|Trl|Trail|Ter(?:race)?|Loop|Run|Pass|Pt|Bend|Glen|Hollow|Ridge|Row|Walk|Sq(?:uare)?|Xing)\b/i;
-    const APT_RE = /\b(Apt\.?|Unit|Suite|Ste\.?|#|Lot|Bldg|Fl(?:oor)?)\s*[\w-]+/i;
-    const US_STATE_RE = /[,\s]+([A-Z]{2})\s*$/;
-
     function splitAddress(raw) {
-  const parts = [];
-  let s = raw.trim().replace(/\r\n|\r|\n/g, ' ').replace(/\s+/g, ' ');
+      const parts = [];
+      let s = raw.trim().replace(/\r\n|\r|\n/g, ' ').replace(/\s+/g, ' ');
 
-  const zipM = s.match(/\b(\d{5})(?:-\d{4})?\s*$/);
-  const zip = zipM ? zipM[1] : '';
-  if (zipM) s = s.slice(0, zipM.index).trim().replace(/,\s*$/, '');
+      const zipM = s.match(/\b(\d{5})(?:-\d{4})?\s*$/);
+      const zip = zipM ? zipM[1] : '';
+      if (zipM) s = s.slice(0, zipM.index).trim().replace(/,\s*$/, '');
 
-  const stateM = s.match(/(?:,|\s)\s*([A-Za-z]{2})\s*$/);
-  const state = stateM ? stateM[1].toUpperCase() : '';
-  if (stateM) s = s.slice(0, stateM.index).trim().replace(/,\s*$/, '');
+      const stateM = s.match(/(?:,|\s)\s*([A-Za-z]{2})\s*$/);
+      const state = stateM ? stateM[1].toUpperCase() : '';
+      if (stateM) s = s.slice(0, stateM.index).trim().replace(/,\s*$/, '');
 
-  const APT_RE = /\b(Apt\.?|Unit|Suite|Ste\.?|#|Lot|Bldg|Fl(?:oor)?)\s*[\w-]+/i;
-  const aptM = s.match(APT_RE);
-  let apt = '';
-  if (aptM) {
-    apt = aptM[0].trim();
-    s = (s.slice(0, aptM.index) + s.slice(aptM.index + aptM[0].length)).trim().replace(/,\s*$/, '');
-  }
+      const APT_RE = /\b(Apt\.?|Unit|Suite|Ste\.?|#|Lot|Bldg|Fl(?:oor)?)\s*[\w-]+/i;
+      const aptM = s.match(APT_RE);
+      let apt = '';
+      if (aptM) {
+        apt = aptM[0].trim();
+        s = (s.slice(0, aptM.index) + s.slice(aptM.index + aptM[0].length)).trim().replace(/,\s*$/, '');
+      }
 
-  const suffixes = [
-    'Alley','Aly','Anex','Anx','Arc','Arcade',
-    'Avenue','Ave',
-    'Bayou','Byu','Beach','Bch','Bend','Bnd',
-    'Bluff','Blf','Boulevard','Blvd',
-    'Bottom','Btm','Branch','Br','Bridge','Brg',
-    'Brook','Brk','Bypass','Byp',
-    'Camp','Cp','Canyon','Cyn','Cape','Cpe',
-    'Causeway','Cswy','Center','Ctr','Cen',
-    'Circle','Cir','Cliff','Clf',
-    'Club','Clb','Common','Cmn',
-    'Corner','Cor','Corners','Cors',
-    'Course','Crse','Court','Ct','Courts','Cts',
-    'Cove','Cv','Creek','Crk',
-    'Crescent','Cres','Crest','Crst',
-    'Crossing','Xing','Curve','Curv',
-    'Dale','Dl','Dam','Dm','Divide','Div',
-    'Drive','Dr',
-    'Estates','Estate','Est',
-    'Expressway','Expy','Extension','Ext',
-    'Falls','Fall','Fls','Ford','Frd',
-    'Forge','Frg','Forks','Fork','Frk','Frks',
-    'Freeway','Fwy',
-    'Gardens','Garden','Gdns','Gdn',
-    'Gateway','Gtwy','Glen','Gln',
-    'Green','Grn','Grove','Grv',
-    'Harbor','Hbr','Haven','Hvn',
-    'Heights','Hgts','Hts','Highway','Hwy',
-    'Hills','Hill','Hls','Hollow','Holw',
-    'Inlet','Inlt','Island','Is','Isle',
-    'Junction','Jct','Key','Ky','Knoll','Knl',
-    'Lake','Lk','Lane','Ln','Landing','Lndg',
-    'Light','Lgt','Loop','Mall',
-    'Manor','Mnr','Meadows','Meadow','Mdws','Mdw',
-    'Mews','Mills','Mill','Mls','Ml',
-    'Mission','Msn',
-    'Mountain','Mtn','Mount','Mt',
-    'Motorway','Mtwy','Neck','Nck',
-    'Orchard','Orch','Oval','Ovl','Overlook','Ovlk',
-    'Parkway','Pkwy','Pky','Park','Pk',
-    'Pass','Path','Pike','Pke',
-    'Pines','Pine','Pnes','Pne',
-    'Place','Pl','Plains','Plain','Plns','Pln',
-    'Plaza','Plz','Points','Point','Pts','Pt',
-    'Port','Prt','Prairie','Pr','Promenade',
-    'Radial','Rad','Ramp','Ranch','Rnch',
-    'Rapid','Rpd','Ridge','Rdg','River','Riv',
-    'Road','Rd','Row','Rue','Run',
-    'Shoals','Shoal','Shls','Shl',
-    'Shore','Shr','Skyway','Skwy',
-    'Springs','Spring','Spgs','Spg',
-    'Spur','Square','Sq','Station','Sta',
-    'Stravenue','Stra','Stream','Strm',
-    'Street','St','Summit','Smt',
-    'Terrace','Ter',
-    'Throughway','Trwy','Turnpike','Tpke',
-    'Trace','Trce','Track','Trak',
-    'Trail','Trl','Trailer','Trlr',
-    'Tunnel','Tunn','Union','Un',
-    'Valley','Vly','Via',
-    'View','Vw','Village','Vlg','Vista','Vis',
-    'Walk','Wall','Way',
-    'Wells','Well','Wls','Wl','Wye'
-  ];
-  const sorted = [...suffixes].sort((a, b) => b.length - a.length);
-  const SUFFIX_PAT = new RegExp('\\b(' + sorted.map(x => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')\\b', 'gi');
+      const suffixes = ['Alley','Aly','Anex','Anx','Arc','Arcade','Avenue','Ave','Bayou','Byu','Beach','Bch','Bend','Bnd','Bluff','Blf','Boulevard','Blvd','Bottom','Btm','Branch','Br','Bridge','Brg','Brook','Brk','Bypass','Byp','Camp','Cp','Canyon','Cyn','Cape','Cpe','Causeway','Cswy','Center','Ctr','Cen','Circle','Cir','Cliff','Clf','Club','Clb','Common','Cmn','Corner','Cor','Corners','Cors','Course','Crse','Court','Ct','Courts','Cts','Cove','Cv','Creek','Crk','Crescent','Cres','Crest','Crst','Crossing','Xing','Curve','Curv','Dale','Dl','Dam','Dm','Divide','Div','Drive','Dr','Estates','Estate','Est','Expressway','Expy','Extension','Ext','Falls','Fall','Fls','Ford','Frd','Forge','Frg','Forks','Fork','Frk','Frks','Freeway','Fwy','Gardens','Garden','Gdns','Gdn','Gateway','Gtwy','Glen','Gln','Green','Grn','Grove','Grv','Harbor','Hbr','Haven','Hvn','Heights','Hgts','Hts','Highway','Hwy','Hills','Hill','Hls','Hollow','Holw','Inlet','Inlt','Island','Is','Isle','Junction','Jct','Key','Ky','Knoll','Knl','Lake','Lk','Lane','Ln','Landing','Lndg','Light','Lgt','Loop','Mall','Manor','Mnr','Meadows','Meadow','Mdws','Mdw','Mews','Mills','Mill','Mls','Ml','Mission','Msn','Mountain','Mtn','Mount','Mt','Motorway','Mtwy','Neck','Nck','Orchard','Orch','Oval','Ovl','Overlook','Ovlk','Parkway','Pkwy','Pky','Park','Pk','Pass','Path','Pike','Pke','Pines','Pine','Pnes','Pne','Place','Pl','Plains','Plain','Plns','Pln','Plaza','Plz','Points','Point','Pts','Pt','Port','Prt','Prairie','Pr','Promenade','Radial','Rad','Ramp','Ranch','Rnch','Rapid','Rpd','Ridge','Rdg','River','Riv','Road','Rd','Row','Rue','Run','Shoals','Shoal','Shls','Shl','Shore','Shr','Skyway','Skwy','Springs','Spring','Spgs','Spg','Spur','Square','Sq','Station','Sta','Stravenue','Stra','Stream','Strm','Street','St','Summit','Smt','Terrace','Ter','Throughway','Trwy','Turnpike','Tpke','Trace','Trce','Track','Trak','Trail','Trl','Trailer','Trlr','Tunnel','Tunn','Union','Un','Valley','Vly','Via','View','Vw','Village','Vlg','Vista','Vis','Walk','Wall','Way','Wells','Well','Wls','Wl','Wye'];
+      const sorted = [...suffixes].sort((a, b) => b.length - a.length);
+      const SUFFIX_PAT = new RegExp('\\b(' + sorted.map(x => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')\\b', 'gi');
 
-  const allMatches = [...s.matchAll(SUFFIX_PAT)];
-  let city = '';
+      const allMatches = [...s.matchAll(SUFFIX_PAT)];
+      let city = '';
+      let chosenMatch = null;
+      for (let i = allMatches.length - 1; i >= 0; i--) {
+        const m = allMatches[i];
+        const after = s.slice(m.index + m[0].length).trim().replace(/^[,\s]+/, '');
+        if (after && !/^\d/.test(after)) { chosenMatch = m; break; }
+      }
 
-  // Walk matches from the end, take the last one that actually has city text after it.
-  // This prevents suffix words embedded in city names (e.g. "Springs" in "Colorado Springs",
-  // "Bend" in "Bend OR") from being mistaken for the street/city split point.
-  let chosenMatch = null;
-  for (let i = allMatches.length - 1; i >= 0; i--) {
-    const m = allMatches[i];
-    const after = s.slice(m.index + m[0].length).trim().replace(/^[,\s]+/, '');
-    if (after && !/^\d/.test(after)) { chosenMatch = m; break; }
-  }
+      if (chosenMatch) {
+        const suffixEnd = chosenMatch.index + chosenMatch[0].length;
+        city = s.slice(suffixEnd).trim().replace(/^[,\s]+/, '');
+        s = s.slice(0, suffixEnd).trim();
+      } else if (allMatches.length === 0) {
+        const commaM = s.match(/^(.+),\s*([^,]+)$/);
+        if (commaM) { city = commaM[2].trim(); s = commaM[1].trim(); }
+      }
 
-  if (chosenMatch) {
-    const suffixEnd = chosenMatch.index + chosenMatch[0].length;
-    city = s.slice(suffixEnd).trim().replace(/^[,\s]+/, '');
-    s = s.slice(0, suffixEnd).trim();
-  } else if (allMatches.length === 0) {
-    const commaM = s.match(/^(.+),\s*([^,]+)$/);
-    if (commaM) { city = commaM[2].trim(); s = commaM[1].trim(); }
-  }
+      const numM = s.match(/^(\d+\S*)\s+/);
+      const sn = numM ? numM[1] : '';
+      if (numM) s = s.slice(numM[0].length).trim();
+      const street = s.trim();
 
-  const numM = s.match(/^(\d+\S*)\s+/);
-  const sn = numM ? numM[1] : '';
-  if (numM) s = s.slice(numM[0].length).trim();
-  const street = s.trim();
-
-  if (sn)     parts.push({ label: 'Street #',   value: sn });
-  if (street) parts.push({ label: 'Street Name', value: street });
-  if (apt)    parts.push({ label: 'Apt / Unit',  value: apt });
-  if (city)   parts.push({ label: 'City',        value: city });
-  if (state)  parts.push({ label: 'State',       value: state });
-  if (zip)    parts.push({ label: 'ZIP',         value: zip });
-  return parts;
-}
+      if (sn)     parts.push({ label: 'Street #',   value: sn });
+      if (street) parts.push({ label: 'Street Name', value: street });
+      if (apt)    parts.push({ label: 'Apt / Unit',  value: apt });
+      if (city)   parts.push({ label: 'City',        value: city });
+      if (state)  parts.push({ label: 'State',       value: state });
+      if (zip)    parts.push({ label: 'ZIP',         value: zip });
+      return parts;
+    }
 
     function makeCopyBtn(v) {
       const btn = document.createElement('button');
@@ -1305,31 +1292,19 @@
       btn.addEventListener('click', () => { daysOff.has(d) ? daysOff.delete(d) : daysOff.add(d); btn.classList.toggle('active'); recalc() })
     });
 
-    function addDays(date, days) {
-      const d = new Date(date);
-      d.setDate(d.getDate() + days);
-      return d;
-    }
+    function addDays(date, days) { const d = new Date(date); d.setDate(d.getDate() + days); return d; }
 
     function getScorecardCycle(today = new Date()) {
-      const y = today.getFullYear();
-      const m = today.getMonth();
-      const day = today.getDate();
-
+      const y = today.getFullYear(), m = today.getMonth(), day = today.getDate();
       let start, end;
-
       if (day <= 28) {
         end = new Date(y, m, 28);
         start = new Date(y, m - 1, 29);
-
-        // Spectrum cycle normally runs previous-month 29th through current-month 28th.
-        // March is the exception: it starts 03/01 because February does not reliably have a 29th.
         if (m === 2) start = new Date(y, 2, 1);
       } else {
         start = new Date(y, m, 29);
         end = new Date(y, m + 1, 28);
       }
-
       return { start, end, today };
     }
 
@@ -1339,13 +1314,9 @@
       return c;
     }
 
-    // FIXED: advance date before counting so we stop ON the target working day
     function workingDaysUntilGoal(from, wr, extra) {
       let c = 0; const cur = new Date(from);
-      while (c < extra) {
-        cur.setDate(cur.getDate() + 1);
-        if (!daysOff.has(cur.getDay())) c++;
-      }
+      while (c < extra) { cur.setDate(cur.getDate() + 1); if (!daysOff.has(cur.getDay())) c++; }
       return cur;
     }
 
@@ -1380,15 +1351,12 @@
 
     function recalc() {
       const cycle = getScorecardCycle();
-      const start = cycle.start;
-      const end = cycle.end;
-      const today = cycle.today;
+      const { start, end, today } = cycle;
 
       document.getElementById('cfgStart').value = fmtDate(start);
       document.getElementById('cfgEnd').value = fmtDate(end);
       document.getElementById('cfgToday').value = fmtDate(today);
 
-      // countWorkingDays() treats the second date as exclusive, so this includes the 28th.
       const endExclusive = addDays(end, 1);
 
       const baseCalls    = parseFloat(document.getElementById('mCalls').value)    || 0;
@@ -1442,7 +1410,6 @@
 
       const cards = [];
 
-      // AHT
       if (gAHT > 0) {
         const under = aht <= gAHT;
         const fn = projTotal - calls;
@@ -1451,7 +1418,6 @@
         cards.push({ name: 'Avg Handle Time', current: Math.round(aht) + 's', goal: '≤ ' + gAHT + 's', status: under ? 'good' : 'bad', barPct: Math.min(100, (gAHT / Math.max(aht, 1)) * 100), insight: under ? `<span class="hi">${(gAHT - aht).toFixed(0)}s under goal.</span> Max avg on remaining calls: <span class="acc">${Math.round(maxAF)}s</span>.` : `<span class="lo">${(aht - gAHT).toFixed(0)}s over goal.</span> Remaining calls must avg <span class="mid">${Math.round(maxAF)}s</span>.`, projection: `Blended AHT: ${Math.round(aht)}s across ${calls} calls.` });
       }
 
-      // Credits
       if (gCred > 0) {
         const under = credits <= gCred;
         const rIZ = projTotal > 0 ? totalCred / projTotal : credits;
