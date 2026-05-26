@@ -66,6 +66,20 @@
 
     .hdr-sep { flex: 1 }
 
+    .hdr-help {
+      font-family: var(--mono);
+      font-size: .68rem;
+      color: var(--muted);
+      cursor: pointer;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: .15rem .45rem;
+      transition: all .15s;
+      user-select: none
+    }
+
+    .hdr-help:hover { border-color: var(--border2); color: var(--dim) }
+
     .hdr-time {
       font-family: var(--mono);
       font-size: .75rem;
@@ -95,7 +109,10 @@
       border-bottom: 2px solid transparent;
       transition: color .15s, border-color .15s;
       user-select: none;
-      white-space: nowrap
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: .4rem
     }
 
     .tab:hover { color: var(--dim) }
@@ -200,6 +217,71 @@
     ::-webkit-scrollbar { width: 5px; height: 5px }
     ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px }
     ::-webkit-scrollbar-track { background: transparent }
+
+    /* SHORTCUT OVERLAY */
+    .shortcut-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.7);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center
+    }
+
+    .shortcut-overlay.show { display: flex }
+
+    .shortcut-modal {
+      background: var(--panel);
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+      padding: 1.4rem 1.6rem;
+      min-width: 340px;
+      max-width: 480px;
+      animation: slideIn .15s ease
+    }
+
+    .shortcut-modal-title {
+      font-family: var(--mono);
+      font-size: .72rem;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 1rem
+    }
+
+    .shortcut-section {
+      font-family: var(--mono);
+      font-size: .6rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: .8rem 0 .4rem
+    }
+
+    .shortcut-section:first-of-type { margin-top: 0 }
+
+    .shortcut-row {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      padding: .25rem 0;
+      border-bottom: 1px solid var(--border)
+    }
+
+    .shortcut-row:last-child { border-bottom: none }
+
+    .shortcut-keys { display: flex; gap: .25rem; min-width: 160px }
+    .shortcut-desc { font-family: var(--mono); font-size: .72rem; color: var(--dim) }
+
+    .shortcut-dismiss {
+      margin-top: 1rem;
+      text-align: center;
+      font-family: var(--mono);
+      font-size: .65rem;
+      color: var(--muted)
+    }
 
     /* CHANNELS */
     .ch-layout { display: grid; grid-template-columns: 1fr 230px; gap: 1rem }
@@ -780,17 +862,40 @@
 
 <body>
 
+  <!-- SHORTCUT OVERLAY -->
+  <div class="shortcut-overlay" id="shortcutOverlay">
+    <div class="shortcut-modal">
+      <div class="shortcut-modal-title">Keyboard Shortcuts</div>
+
+      <div class="shortcut-section">Navigation</div>
+      <div class="shortcut-row"><div class="shortcut-keys"><kbd>←</kbd><kbd>→</kbd></div><div class="shortcut-desc">Switch tabs</div></div>
+      <div class="shortcut-row"><div class="shortcut-keys"><kbd>?</kbd></div><div class="shortcut-desc">Toggle this overlay</div></div>
+
+      <div class="shortcut-section">Notes</div>
+      <div class="shortcut-row"><div class="shortcut-keys"><kbd>Ctrl</kbd><kbd>Enter</kbd></div><div class="shortcut-desc">Pin note</div></div>
+      <div class="shortcut-row"><div class="shortcut-keys"><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>Enter</kbd></div><div class="shortcut-desc">Pin &amp; evaluate as math</div></div>
+      <div class="shortcut-row"><div class="shortcut-keys"><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>Z</kbd></div><div class="shortcut-desc">Clear all pinned notes</div></div>
+
+      <div class="shortcut-section">Channels</div>
+      <div class="shortcut-row"><div class="shortcut-keys"><kbd>Enter</kbd></div><div class="shortcut-desc">Add matched channel</div></div>
+      <div class="shortcut-row"><div class="shortcut-keys"><kbd>Ctrl</kbd><kbd>Z</kbd></div><div class="shortcut-desc">Undo last Clear All</div></div>
+
+      <div class="shortcut-dismiss">Press <kbd>Esc</kbd> or <kbd>?</kbd> to close</div>
+    </div>
+  </div>
+
   <div class="hdr">
     <span class="hdr-logo">SIDEKICK</span>
     <span class="hdr-sep"></span>
+    <span class="hdr-help" id="helpBtn" title="Keyboard shortcuts (?)">?</span>
     <span class="hdr-time" id="clock"></span>
   </div>
 
-  <div class="tabs">
-    <div class="tab active" data-tab="notes">Notes</div>
-    <div class="tab" data-tab="address">Address</div>
-    <div class="tab" data-tab="channels">Channels</div>
-    <div class="tab" data-tab="scorecard">Scorecard</div>
+  <div class="tabs" id="tabBar">
+    <div class="tab active" data-tab="notes" tabindex="0">Notes</div>
+    <div class="tab" data-tab="address" tabindex="0">Address</div>
+    <div class="tab" data-tab="channels" tabindex="0">Channels</div>
+    <div class="tab" data-tab="scorecard" tabindex="0">Scorecard</div>
   </div>
 
   <!-- CHANNELS -->
@@ -805,7 +910,7 @@
           <div class="ch-input-area">
             <div class="ch-input-wrap">
               <input type="text" id="chTypeInput" class="ch-type-input"
-                placeholder="Type a channel, press Enter to add…" autocomplete="off" spellcheck="false" autofocus>
+                placeholder="Type a channel, press Enter to add…" autocomplete="off" spellcheck="false">
             </div>
             <div class="ch-suggestion" id="chSuggestion"></div>
             <div class="ch-hint"><kbd>Enter</kbd> to add &nbsp;·&nbsp; <kbd>Ctrl</kbd>+<kbd>Z</kbd> to undo Clear All &nbsp;·&nbsp; partial names work</div>
@@ -1023,21 +1128,145 @@
   </div>
 
   <script>
-    // CLOCK
-    function updateClock() { document.getElementById('clock').textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) }
+    // ─── CLOCK ───────────────────────────────────────────────────────────────
+    function updateClock() {
+      document.getElementById('clock').textContent =
+        new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
     updateClock(); setInterval(updateClock, 1000);
 
-    // TABS
-    document.querySelectorAll('.tab').forEach(tab => {
-      tab.addEventListener('click', () => {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.workspace').forEach(w => w.classList.remove('active'));
-        tab.classList.add('active');
-        document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
-      });
+    // ─── SHORTCUT OVERLAY ────────────────────────────────────────────────────
+    const overlay = document.getElementById('shortcutOverlay');
+    function toggleOverlay() { overlay.classList.toggle('show') }
+    document.getElementById('helpBtn').addEventListener('click', toggleOverlay);
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('show') });
+
+    // ─── TABS ────────────────────────────────────────────────────────────────
+    const tabEls = Array.from(document.querySelectorAll('.tab'));
+    function activateTab(tab) {
+      tabEls.forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.workspace').forEach(w => w.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+    }
+    tabEls.forEach(tab => tab.addEventListener('click', () => activateTab(tab)));
+
+    // ─── GLOBAL KEYBOARD ─────────────────────────────────────────────────────
+    document.addEventListener('keydown', e => {
+      const tag = document.activeElement ? document.activeElement.tagName : '';
+      const inField = tag === 'INPUT' || tag === 'TEXTAREA';
+
+      // ? → shortcut overlay (only when not in a field)
+      if (e.key === '?' && !inField) { e.preventDefault(); toggleOverlay(); return }
+
+      // Esc → close overlay
+      if (e.key === 'Escape') { overlay.classList.remove('show'); return }
+
+      // Arrow tab nav (only when not in a field and overlay closed)
+      if (!inField && !overlay.classList.contains('show') && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+        const cur = tabEls.findIndex(t => t.classList.contains('active'));
+        const next = e.key === 'ArrowRight'
+          ? (cur + 1) % tabEls.length
+          : (cur - 1 + tabEls.length) % tabEls.length;
+        activateTab(tabEls[next]);
+        return;
+      }
+
+      // Ctrl+Z for channels (undo Clear All) — only when channels tab active and not in field
+      if (e.ctrlKey && !e.shiftKey && e.key === 'z') {
+        const channelsActive = document.getElementById('tab-channels').classList.contains('active');
+        if (channelsActive && !inField) {
+          if (clearedSnapshot !== null) {
+            e.preventDefault();
+            selected = [...clearedSnapshot];
+            customSet = new Set(clearedCustomSnapshot);
+            clearedSnapshot = null;
+            clearedCustomSnapshot = null;
+            renderQueue(); renderBadge();
+            saveChannels();
+          }
+        }
+      }
     });
 
-    // CHANNELS DATA
+    // ─── SAFE MATH PARSER ────────────────────────────────────────────────────
+    // Replaces eval(). Supports: + - * / ( ) integers and decimals.
+    function safeMath(expr) {
+      const s = expr.replace(/\s/g, '');
+      if (!s) return null;
+      // Only allow digits, operators, parens, dots, unary minus
+      if (!/^[\d+\-*/().]+$/.test(s)) return null;
+      // No consecutive operators (except unary minus after open paren or start)
+      // No letters at all (already blocked by regex above)
+      try {
+        const result = parseExpr(s, { pos: 0 });
+        if (!isFinite(result.val)) return null;
+        return { val: result.val, expr: expr.trim() };
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function parseExpr(s, state) { return parseAddSub(s, state) }
+
+    function parseAddSub(s, state) {
+      let left = parseMulDiv(s, state);
+      while (state.pos < s.length && (s[state.pos] === '+' || s[state.pos] === '-')) {
+        const op = s[state.pos++];
+        const right = parseMulDiv(s, state);
+        left = op === '+' ? left + right : left - right;
+      }
+      return left;
+    }
+
+    function parseMulDiv(s, state) {
+      let left = parseUnary(s, state);
+      while (state.pos < s.length && (s[state.pos] === '*' || s[state.pos] === '/')) {
+        const op = s[state.pos++];
+        const right = parseUnary(s, state);
+        if (op === '/' && right === 0) throw new Error('div by zero');
+        left = op === '*' ? left * right : left / right;
+      }
+      return left;
+    }
+
+    function parseUnary(s, state) {
+      if (s[state.pos] === '-') { state.pos++; return -parsePrimary(s, state) }
+      if (s[state.pos] === '+') { state.pos++; return parsePrimary(s, state) }
+      return parsePrimary(s, state);
+    }
+
+    function parsePrimary(s, state) {
+      if (s[state.pos] === '(') {
+        state.pos++; // consume (
+        const val = parseExpr(s, state);
+        if (s[state.pos] !== ')') throw new Error('expected )');
+        state.pos++; // consume )
+        return val;
+      }
+      // number
+      const start = state.pos;
+      while (state.pos < s.length && /[\d.]/.test(s[state.pos])) state.pos++;
+      if (state.pos === start) throw new Error('expected number at ' + state.pos);
+      return parseFloat(s.slice(start, state.pos));
+    }
+
+    // ─── localStorage PERSISTENCE (scorecard + channels only) ─────────────────
+    const STORE_KEY = 'sidekick_v1';
+
+    function loadStore() {
+      try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {} }
+      catch(e) { return {} }
+    }
+
+    function saveStore(patch) {
+      try {
+        const cur = loadStore();
+        localStorage.setItem(STORE_KEY, JSON.stringify({ ...cur, ...patch }));
+      } catch(e) { /* storage unavailable, silently continue */ }
+    }
+
+    // ─── CHANNELS DATA ────────────────────────────────────────────────────────
     const CATEGORIES = [
       { id: 'entertainment', channels: ["Animal Planet", "Cartoon Network", "Disney", "Disney Jr", "Disney XD", "Freeform", "Nickelodeon", "Discovery", "History", "TLC", "TV Land", "A&E", "Aspire", "Bravo", "Food Network", "HGTV", "ID", "Impact", "Nat Geo", "Nat Geo Wild", "SyFy", "Travel Channel", "We TV", "AMC", "BET", "CMT", "Cleo", "Comedy Central", "E", "FX", "FXX", "FX Movie Channel", "Game Show", "Hallmark", "Hallmark Mystery", "Lifetime", "Lifetime Movies", "MTV", "MTV 2", "OWN", "Oxygen", "POP", "Revolt", "Smithsonian", "Paramount", "TBS", "TCM", "TNT", "TV One", "Tru TV", "USA", "VH1"] },
       { id: 'news', channels: ["BBC America", "BBC World News", "TheGrio", "Bloomberg TV", "CNBC", "CNN", "NewsNation Network", "Fox Business", "Fox News", "HLN", "MS NOW", "Weather Channel"] },
@@ -1048,17 +1277,61 @@
     const ALIASES = { "fs1": "Fox Sports 1", "fs 1": "Fox Sports 1", "fox sports 1": "Fox Sports 1", "fs2": "Fox Sports 2", "fs 2": "Fox Sports 2", "fox sports 2": "Fox Sports 2", "espn2": "ESPN 2", "mtv2": "MTV 2", "gameshow": "Game Show", "game show network": "Game Show", "gsn": "Game Show", "wetv": "We TV", "we tv": "We TV", "bein": "BeIN Sports", "bein en espanol": "BeIN Sports en Espanol", "nat geo wild": "Nat Geo Wild", "natgeo wild": "Nat Geo Wild", "national geographic": "Nat Geo", "natgeo": "Nat Geo", "investigation discovery": "ID", "hallmark channel": "Hallmark", "hallmark movies & mysteries": "Hallmark Mystery", "hallmark movies": "Hallmark Mystery", "lmn": "Lifetime Movies", "lifetime movie network": "Lifetime Movies", "tru": "Tru TV", "trutv": "Tru TV", "thegrio": "TheGrio", "freeform": "Freeform", "abc family": "Freeform", "e!": "E", "syfy": "SyFy", "nfl": "NFL Network", "msg": "Madison Square Garden Network", "sny": "SportsNet New York", "yes": "Yankee Entertainment and Sports Network", "yes network": "Yankee Entertainment and Sports Network", "tudn": "TUDN", "univision deportes": "TUDN", "newsnation": "NewsNation Network", "bloomberg": "Bloomberg TV", "msnow": "MS NOW" };
 
     function aosIndex(n) { const i = AOS_ORDER.indexOf(n); return i === -1 ? 9999 : i }
-    function fuzzyScore(q, t) { q = q.toLowerCase(); t = t.toLowerCase(); if (t === q) return 1000; if (t.startsWith(q)) return 500 + (100 - t.length); if (t.includes(q)) return 200 + (100 - t.indexOf(q)); const words = t.split(/\s+/); for (const w of words) if (w.startsWith(q)) return 150; const acr = words.map(w => w[0]).join(''); if (acr === q) return 120; let qi = 0; for (let ti = 0; ti < t.length && qi < q.length; ti++)if (t[ti] === q[qi]) qi++; if (qi === q.length) return 50; return -1 }
+    function fuzzyScore(q, t) { q = q.toLowerCase(); t = t.toLowerCase(); if (t === q) return 1000; if (t.startsWith(q)) return 500 + (100 - t.length); if (t.includes(q)) return 200 + (100 - t.indexOf(q)); const words = t.split(/\s+/); for (const w of words) if (w.startsWith(q)) return 150; const acr = words.map(w => w[0]).join(''); if (acr === q) return 120; let qi = 0; for (let ti = 0; ti < t.length && qi < q.length; ti++) if (t[ti] === q[qi]) qi++; if (qi === q.length) return 50; return -1 }
     function bestMatch(q) { if (!q.trim()) return null; const ql = q.trim().toLowerCase(); if (ALIASES[ql]) return ALIASES[ql]; let best = null, bs = -1; for (const ch of AOS_ORDER) { const s = fuzzyScore(ql, ch); if (s > bs) { bs = s; best = ch } } return bs >= 50 ? best : null }
-    function updateSuggestion() { const raw = document.getElementById('chTypeInput').value, el = document.getElementById('chSuggestion'), inp = document.getElementById('chTypeInput'); if (!raw.trim()) { el.innerHTML = ''; inp.className = 'ch-type-input'; return } const m = bestMatch(raw); if (m) { const d = selected.includes(m); el.innerHTML = `<span class="ch-suggestion-name">${m}</span><span class="ch-suggestion-hint">${d ? '⚠ already added' : '— press Enter'}</span>`; inp.className = 'ch-type-input match' } else { el.innerHTML = `<span class="ch-suggestion-none">Not on list</span><span class="ch-suggestion-hint" style="color:var(--warn)"> — Enter to add as custom</span>`; inp.className = 'ch-type-input no-match' } }
+    function updateSuggestion() {
+      const raw = document.getElementById('chTypeInput').value, el = document.getElementById('chSuggestion'), inp = document.getElementById('chTypeInput');
+      if (!raw.trim()) { el.innerHTML = ''; inp.className = 'ch-type-input'; return }
+      const m = bestMatch(raw);
+      if (m) {
+        const d = selected.includes(m);
+        el.innerHTML = `<span class="ch-suggestion-name">${m}</span><span class="ch-suggestion-hint">${d ? '⚠ already added' : '— press Enter'}</span>`;
+        inp.className = 'ch-type-input match';
+      } else {
+        el.innerHTML = `<span class="ch-suggestion-none">Not on list</span><span class="ch-suggestion-hint" style="color:var(--warn)"> — Enter to add as custom</span>`;
+        inp.className = 'ch-type-input no-match';
+      }
+    }
+
+    function saveChannels() {
+      saveStore({ channels: selected, channelCustom: [...customSet] });
+    }
 
     let selected = [], customSet = new Set();
-    // Snapshot saved before Clear All — restored by Ctrl+Z
     let clearedSnapshot = null, clearedCustomSnapshot = null;
 
-    function addChannel(n) { if (selected.length >= 15) return; selected.push(n); renderQueue(); renderBadge() }
-    function renderQueue() { const q = document.getElementById('chQueue'), sorted = [...selected].sort((a, b) => aosIndex(a) - aosIndex(b)); document.getElementById('dupWarn').classList.toggle('show', new Set(selected).size !== selected.length); if (!sorted.length) { q.innerHTML = '<div class="ch-queue-empty">Type a channel name<br>and press Enter.<br><br>List sorts automatically.</div>'; return } q.innerHTML = ''; sorted.forEach((ch, i) => { const item = document.createElement('div'); item.className = 'ch-queue-item' + (customSet.has(ch) ? ' custom' : ''); const num = document.createElement('span'); num.className = 'ch-queue-num'; num.textContent = i + 1; const name = document.createElement('span'); name.className = 'ch-queue-name'; name.textContent = ch; const del = document.createElement('button'); del.className = 'ch-queue-del'; del.innerHTML = '✕'; del.addEventListener('click', () => { const si = selected.lastIndexOf(ch); if (si !== -1) selected.splice(si, 1); renderQueue(); renderBadge() }); item.appendChild(num); item.appendChild(name); item.appendChild(del); q.appendChild(item) }) }
-    function renderBadge() { document.getElementById('ch-badge').textContent = `${selected.length} / 15`; document.getElementById('chCount').textContent = selected.length; document.getElementById('chCopy').disabled = selected.length === 0 }
+    // Restore channels from storage
+    (function() {
+      const s = loadStore();
+      if (s.channels) selected = s.channels;
+      if (s.channelCustom) customSet = new Set(s.channelCustom);
+    })();
+
+    function addChannel(n) { if (selected.length >= 15) return; selected.push(n); renderQueue(); renderBadge(); saveChannels() }
+    function renderQueue() {
+      const q = document.getElementById('chQueue'), sorted = [...selected].sort((a, b) => aosIndex(a) - aosIndex(b));
+      document.getElementById('dupWarn').classList.toggle('show', new Set(selected).size !== selected.length);
+      if (!sorted.length) { q.innerHTML = '<div class="ch-queue-empty">Type a channel name<br>and press Enter.<br><br>List sorts automatically.</div>'; return }
+      q.innerHTML = '';
+      sorted.forEach((ch, i) => {
+        const item = document.createElement('div');
+        item.className = 'ch-queue-item' + (customSet.has(ch) ? ' custom' : '');
+        const num = document.createElement('span'); num.className = 'ch-queue-num'; num.textContent = i + 1;
+        const name = document.createElement('span'); name.className = 'ch-queue-name'; name.textContent = ch;
+        const del = document.createElement('button'); del.className = 'ch-queue-del'; del.innerHTML = '✕';
+        del.addEventListener('click', () => {
+          const si = selected.lastIndexOf(ch);
+          if (si !== -1) selected.splice(si, 1);
+          renderQueue(); renderBadge(); saveChannels();
+        });
+        item.appendChild(num); item.appendChild(name); item.appendChild(del); q.appendChild(item);
+      });
+    }
+    function renderBadge() {
+      document.getElementById('ch-badge').textContent = `${selected.length} / 15`;
+      document.getElementById('chCount').textContent = selected.length;
+      document.getElementById('chCopy').disabled = selected.length === 0;
+    }
 
     const chInp = document.getElementById('chTypeInput');
     chInp.addEventListener('input', updateSuggestion);
@@ -1074,7 +1347,6 @@
         chInp.className = 'ch-type-input';
         document.getElementById('chSuggestion').innerHTML = '';
       }
-      // Backspace-to-undo-last-channel intentionally removed
     });
 
     document.getElementById('chCopy').addEventListener('click', () => {
@@ -1087,41 +1359,17 @@
     });
 
     document.getElementById('chClear').addEventListener('click', () => {
-      // Snapshot the current list so Ctrl+Z can restore it
       clearedSnapshot = [...selected];
       clearedCustomSnapshot = new Set(customSet);
-      selected = [];
-      customSet.clear();
-      chInp.value = '';
-      chInp.className = 'ch-type-input';
+      selected = []; customSet.clear();
+      chInp.value = ''; chInp.className = 'ch-type-input';
       document.getElementById('chSuggestion').innerHTML = '';
-      renderQueue();
-      renderBadge();
-    });
-
-    // Ctrl+Z on the Channels tab restores the last Clear All,
-    // but only when focus is NOT inside a text field (let the browser handle native undo there).
-    document.addEventListener('keydown', e => {
-      if (e.ctrlKey && !e.shiftKey && e.key === 'z') {
-        const channelsActive = document.getElementById('tab-channels').classList.contains('active');
-        const tag = document.activeElement ? document.activeElement.tagName : '';
-        if (channelsActive && tag !== 'INPUT' && tag !== 'TEXTAREA') {
-          if (clearedSnapshot !== null) {
-            e.preventDefault();
-            selected = [...clearedSnapshot];
-            customSet = new Set(clearedCustomSnapshot);
-            clearedSnapshot = null;
-            clearedCustomSnapshot = null;
-            renderQueue();
-            renderBadge();
-          }
-        }
-      }
+      renderQueue(); renderBadge(); saveChannels();
     });
 
     renderQueue(); renderBadge();
 
-    // ADDRESS SPLITTER
+    // ─── ADDRESS SPLITTER ─────────────────────────────────────────────────────
     function splitAddress(raw) {
       const parts = [];
       let s = raw.trim().replace(/\r\n|\r|\n/g, ' ').replace(/\s+/g, ' ');
@@ -1130,6 +1378,7 @@
       const zip = zipM ? zipM[1] : '';
       if (zipM) s = s.slice(0, zipM.index).trim().replace(/,\s*$/, '');
 
+      // State: two capital letters preceded by a space or comma, at end of remaining string
       const stateM = s.match(/(?:,|\s)\s*([A-Za-z]{2})\s*$/);
       const state = stateM ? stateM[1].toUpperCase() : '';
       if (stateM) s = s.slice(0, stateM.index).trim().replace(/,\s*$/, '');
@@ -1149,9 +1398,11 @@
       const allMatches = [...s.matchAll(SUFFIX_PAT)];
       let city = '';
       let chosenMatch = null;
+
       for (let i = allMatches.length - 1; i >= 0; i--) {
         const m = allMatches[i];
         const after = s.slice(m.index + m[0].length).trim().replace(/^[,\s]+/, '');
+        // after should be the city — not empty, not starting with a digit
         if (after && !/^\d/.test(after)) { chosenMatch = m; break; }
       }
 
@@ -1159,12 +1410,24 @@
         const suffixEnd = chosenMatch.index + chosenMatch[0].length;
         city = s.slice(suffixEnd).trim().replace(/^[,\s]+/, '');
         s = s.slice(0, suffixEnd).trim();
-      } else if (allMatches.length === 0) {
+      } else {
+        // Fallback: if no suffix found, try comma split for city
+        // Also handles "123 Oak St Denver 80210" case (no state, already stripped ZIP)
+        // Try: last word-group after digits is city if no suffix matched
         const commaM = s.match(/^(.+),\s*([^,]+)$/);
-        if (commaM) { city = commaM[2].trim(); s = commaM[1].trim(); }
+        if (commaM) {
+          city = commaM[2].trim();
+          s = commaM[1].trim();
+        } else if (!state && !zip) {
+          // Truly ambiguous — leave city blank, show remaining as street
+        } else {
+          // No suffix, no comma — check if anything trails the street number
+          // Heuristic: everything after the first street type word is city
+          // Best effort: no city identified
+        }
       }
 
-      const numM = s.match(/^(\d+\S*)\s+/);
+      const numM = s.match(/^(\d+[\w-]*)\s+/);
       const sn = numM ? numM[1] : '';
       if (numM) s = s.slice(numM[0].length).trim();
       const street = s.trim();
@@ -1175,20 +1438,24 @@
       if (city)   parts.push({ label: 'City',        value: city });
       if (state)  parts.push({ label: 'State',       value: state });
       if (zip)    parts.push({ label: 'ZIP',         value: zip });
+
+      // If nothing parsed at all, show raw as a single line
+      if (!parts.length && raw.trim()) {
+        parts.push({ label: 'Address', value: raw.trim() });
+      }
       return parts;
     }
 
     function makeCopyBtn(v) {
       const btn = document.createElement('button');
-      btn.className = 'copy-btn';
-      btn.textContent = 'Copy';
+      btn.className = 'copy-btn'; btn.textContent = 'Copy';
       btn.addEventListener('click', () => {
         navigator.clipboard.writeText(v).then(() => {
           btn.textContent = 'Copied!'; btn.classList.add('copied');
-          setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied') }, 1400)
-        })
+          setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied') }, 1400);
+        });
       });
-      return btn
+      return btn;
     }
 
     function renderAddress(raw) {
@@ -1199,18 +1466,43 @@
         const row = document.createElement('div'); row.className = 'addr-part';
         const lbl = document.createElement('span'); lbl.className = 'addr-part-label'; lbl.textContent = p.label;
         const val = document.createElement('span'); val.className = 'addr-part-value'; val.textContent = p.value;
-        row.appendChild(lbl); row.appendChild(val); row.appendChild(makeCopyBtn(p.value)); c.appendChild(row)
-      })
+        row.appendChild(lbl); row.appendChild(val); row.appendChild(makeCopyBtn(p.value)); c.appendChild(row);
+      });
     }
 
     document.getElementById('addrInput').addEventListener('input', e => renderAddress(e.target.value));
 
-    // NOTES
+    // ─── NOTES (deliberately NOT persisted) ───────────────────────────────────
     let pinnedNotes = [];
-    function detectPhone(s) { const d = s.replace(/\D/g, ''); if (d.length === 10) return d; if (d.length === 11 && d[0] === '1') return d.slice(1); return null }
-    function detectMath(s) { if (!/[+\-*\/]/.test(s)) return null; if (/[a-df-wyzA-DF-WYZ]/.test(s)) return null; try { const r = eval(s); if (typeof r !== 'number' || !isFinite(r)) return null; return `${s} = ${parseFloat(r.toFixed(10))}` } catch (e) { return null } }
-    function doClipboard(t, cb) { if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(cb).catch(() => fbCopy(t, cb)); else fbCopy(t, cb) }
-    function fbCopy(t, cb) { const ta = document.createElement('textarea'); ta.value = t; ta.style.cssText = 'position:fixed;opacity:0;top:0;left:0'; document.body.appendChild(ta); ta.focus(); ta.select(); try { document.execCommand('copy'); cb() } catch (e) { } document.body.removeChild(ta) }
+
+    function detectPhone(s) {
+      const d = s.replace(/\D/g, '');
+      if (d.length === 10) return d;
+      if (d.length === 11 && d[0] === '1') return d.slice(1);
+      return null;
+    }
+
+    function detectMath(s) {
+      if (!/[+\-*\/]/.test(s)) return null;
+      if (/[a-df-wyzA-DF-WYZ]/.test(s)) return null;
+      const r = safeMath(s);
+      if (!r) return null;
+      return `${r.expr} = ${parseFloat(r.val.toFixed(10))}`;
+    }
+
+    function doClipboard(t, cb) {
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(cb).catch(() => fbCopy(t, cb));
+      else fbCopy(t, cb);
+    }
+
+    function fbCopy(t, cb) {
+      const ta = document.createElement('textarea');
+      ta.value = t; ta.style.cssText = 'position:fixed;opacity:0;top:0;left:0';
+      document.body.appendChild(ta); ta.focus(); ta.select();
+      try { document.execCommand('copy'); cb() } catch(e) {}
+      document.body.removeChild(ta);
+    }
+
     function renderNotes() {
       const c = document.getElementById('notesPinned');
       c.innerHTML = '';
@@ -1226,10 +1518,8 @@
         if (isPhone) text.innerHTML = `<span class="phone-clean">${phone}</span><span class="phone-raw">${note.text}</span>`;
         else if (isMath) text.innerHTML = `<span class="math-result">${math}</span>`;
         else text.textContent = note.text;
-        const acts = document.createElement('div');
-        acts.className = 'pinned-actions';
-        const cb = document.createElement('button');
-        cb.className = 'pinned-copy';
+        const acts = document.createElement('div'); acts.className = 'pinned-actions';
+        const cb = document.createElement('button'); cb.className = 'pinned-copy';
         cb.textContent = isPhone ? 'Copy #' : 'Copy';
         const cv = isPhone ? phone : isMath ? math : note.text;
         cb.addEventListener('click', () => {
@@ -1238,38 +1528,32 @@
             setTimeout(() => { cb.textContent = isPhone ? 'Copy #' : 'Copy'; cb.classList.remove('copied') }, 1400);
           });
         });
-        const eb = document.createElement('button');
-        eb.className = 'pinned-edit';
-        eb.textContent = 'Edit';
+        const eb = document.createElement('button'); eb.className = 'pinned-edit'; eb.textContent = 'Edit';
         eb.addEventListener('click', () => {
           item.innerHTML = '';
-          const ta = document.createElement('textarea');
-          ta.className = 'pinned-edit-area';
-          ta.value = note.text;
-          ta.rows = Math.max(1, note.text.split('\n').length);
-          const editActs = document.createElement('div');
-          editActs.className = 'pinned-edit-actions';
+          const ta = document.createElement('textarea'); ta.className = 'pinned-edit-area';
+          ta.value = note.text; ta.rows = Math.max(1, note.text.split('\n').length);
+          const editActs = document.createElement('div'); editActs.className = 'pinned-edit-actions';
           const saveBtn = document.createElement('button'); saveBtn.className = 'pinned-save'; saveBtn.textContent = 'Save';
           const cancelBtn = document.createElement('button'); cancelBtn.className = 'pinned-cancel'; cancelBtn.textContent = 'Cancel';
-          saveBtn.addEventListener('click', () => { const newText = ta.value.trim(); if (newText) { pinnedNotes[i].text = newText; } renderNotes(); });
+          saveBtn.addEventListener('click', () => { const newText = ta.value.trim(); if (newText) pinnedNotes[i].text = newText; renderNotes() });
           cancelBtn.addEventListener('click', () => renderNotes());
           ta.addEventListener('keydown', e => {
-            if (e.ctrlKey && e.key === 'Enter') { e.preventDefault(); saveBtn.click(); }
-            if (e.key === 'Escape') { e.preventDefault(); cancelBtn.click(); }
+            if (e.ctrlKey && e.key === 'Enter') { e.preventDefault(); saveBtn.click() }
+            if (e.key === 'Escape') { e.preventDefault(); cancelBtn.click() }
           });
           editActs.appendChild(saveBtn); editActs.appendChild(cancelBtn);
           item.appendChild(ta); item.appendChild(editActs);
           ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length);
         });
-        const db = document.createElement('button');
-        db.className = 'pinned-del';
-        db.textContent = '✕';
-        db.addEventListener('click', () => { pinnedNotes.splice(i, 1); renderNotes(); });
+        const db = document.createElement('button'); db.className = 'pinned-del'; db.textContent = '✕';
+        db.addEventListener('click', () => { pinnedNotes.splice(i, 1); renderNotes() });
         acts.appendChild(cb); acts.appendChild(eb); acts.appendChild(db);
         item.appendChild(text); item.appendChild(acts);
         c.appendChild(item);
       });
     }
+
     document.getElementById('notesArea').addEventListener('keydown', e => {
       if (e.ctrlKey && e.shiftKey && e.key === 'Enter') {
         e.preventDefault(); const v = e.target.value.trim(); if (!v) return;
@@ -1283,16 +1567,49 @@
         e.preventDefault(); pinnedNotes = []; renderNotes();
       }
     });
+
     renderNotes();
 
-    // SCORECARD
+    // ─── SCORECARD ────────────────────────────────────────────────────────────
     let daysOff = new Set();
+
+    // Persist scorecard: collect all relevant input IDs
+    const SC_INPUT_IDS = ['gAHT','gCredits','gSelfRes','gSentiment','gXfer','gFCR','mHours','mCalls','mAHT','mCredits','mSelfRes','mSentiment','mXfer','mFCR'];
+
+    function saveScorecard() {
+      const vals = {};
+      SC_INPUT_IDS.forEach(id => { vals[id] = document.getElementById(id).value });
+      vals.daysOff = [...daysOff];
+      saveStore({ scorecard: vals });
+    }
+
+    function loadScorecard() {
+      const s = loadStore();
+      if (!s.scorecard) return;
+      const d = s.scorecard;
+      SC_INPUT_IDS.forEach(id => {
+        if (d[id] !== undefined) document.getElementById(id).value = d[id];
+      });
+      if (d.daysOff) {
+        d.daysOff.forEach(day => {
+          daysOff.add(day);
+          const btn = document.querySelector(`.day-toggle[data-day="${day}"]`);
+          if (btn) btn.classList.add('active');
+        });
+      }
+    }
+
     document.querySelectorAll('.day-toggle').forEach(btn => {
       const d = parseInt(btn.dataset.day);
-      btn.addEventListener('click', () => { daysOff.has(d) ? daysOff.delete(d) : daysOff.add(d); btn.classList.toggle('active'); recalc() })
+      btn.addEventListener('click', () => {
+        daysOff.has(d) ? daysOff.delete(d) : daysOff.add(d);
+        btn.classList.toggle('active');
+        saveScorecard();
+        recalc();
+      });
     });
 
-    function addDays(date, days) { const d = new Date(date); d.setDate(d.getDate() + days); return d; }
+    function addDays(date, days) { const d = new Date(date); d.setDate(d.getDate() + days); return d }
 
     function getScorecardCycle(today = new Date()) {
       const y = today.getFullYear(), m = today.getMonth(), day = today.getDate();
@@ -1316,7 +1633,7 @@
 
     function workingDaysUntilGoal(from, wr, extra) {
       let c = 0; const cur = new Date(from);
-      while (c < extra) { cur.setDate(cur.getDate() + 1); if (!daysOff.has(cur.getDay())) c++; }
+      while (c < extra) { cur.setDate(cur.getDate() + 1); if (!daysOff.has(cur.getDay())) c++ }
       return cur;
     }
 
@@ -1336,42 +1653,42 @@
         session.selfResMiss ? `Self-Res Misses: <span class="neg">+${session.selfResMiss}</span>` : null,
         session.todayAHT !== null ? `Today's AHT: <span>${session.todayAHT}s</span>` : null
       ].filter(Boolean);
-      el.innerHTML = items.map(i => `<div class="log-sum-item">${i}</div>`).join('')
+      el.innerHTML = items.map(i => `<div class="log-sum-item">${i}</div>`).join('');
     }
 
-    document.getElementById('logClean').addEventListener('click', () => { session.calls++; sessionSummary(); recalc() });
-    document.getElementById('undoCall').addEventListener('click', () => { if (session.calls > 0) { session.calls--; sessionSummary(); recalc() } });
-    document.getElementById('logXfer').addEventListener('click', () => { session.xfers++; sessionSummary(); recalc() });
-    document.getElementById('undoXfer').addEventListener('click', () => { if (session.xfers > 0) { session.xfers--; sessionSummary(); recalc() } });
-    document.getElementById('logCredit').addEventListener('click', () => { const amt = parseFloat(document.getElementById('logCreditAmt').value); if (!amt || amt <= 0) return; session.credits += amt; document.getElementById('logCreditAmt').value = ''; sessionSummary(); recalc() });
-    document.getElementById('logAHT').addEventListener('click', () => { const sec = parseFloat(document.getElementById('logAHTToday').value); if (!sec || sec <= 0) return; session.todayAHT = sec; sessionSummary(); recalc() });
-    document.getElementById('logSelfRes').addEventListener('click', () => { session.selfResMiss++; sessionSummary(); recalc() });
-    document.getElementById('undoSelfRes').addEventListener('click', () => { if (session.selfResMiss > 0) { session.selfResMiss--; sessionSummary(); recalc() } });
-    document.getElementById('logReset').addEventListener('click', () => { session = { calls: 0, xfers: 0, credits: 0, selfResMiss: 0, todayAHT: null }; sessionSummary(); recalc() });
+    document.getElementById('logClean').addEventListener('click',   () => { session.calls++;        sessionSummary(); recalc() });
+    document.getElementById('undoCall').addEventListener('click',   () => { if (session.calls > 0) { session.calls--; sessionSummary(); recalc() } });
+    document.getElementById('logXfer').addEventListener('click',    () => { session.xfers++;        sessionSummary(); recalc() });
+    document.getElementById('undoXfer').addEventListener('click',   () => { if (session.xfers > 0) { session.xfers--; sessionSummary(); recalc() } });
+    document.getElementById('logCredit').addEventListener('click',  () => { const amt = parseFloat(document.getElementById('logCreditAmt').value); if (!amt || amt <= 0) return; session.credits += amt; document.getElementById('logCreditAmt').value = ''; sessionSummary(); recalc() });
+    document.getElementById('logAHT').addEventListener('click',     () => { const sec = parseFloat(document.getElementById('logAHTToday').value); if (!sec || sec <= 0) return; session.todayAHT = sec; sessionSummary(); recalc() });
+    document.getElementById('logSelfRes').addEventListener('click', () => { session.selfResMiss++;   sessionSummary(); recalc() });
+    document.getElementById('undoSelfRes').addEventListener('click',() => { if (session.selfResMiss > 0) { session.selfResMiss--; sessionSummary(); recalc() } });
+    document.getElementById('logReset').addEventListener('click',   () => { session = { calls: 0, xfers: 0, credits: 0, selfResMiss: 0, todayAHT: null }; sessionSummary(); recalc() });
 
     function recalc() {
       const cycle = getScorecardCycle();
       const { start, end, today } = cycle;
 
       document.getElementById('cfgStart').value = fmtDate(start);
-      document.getElementById('cfgEnd').value = fmtDate(end);
+      document.getElementById('cfgEnd').value   = fmtDate(end);
       document.getElementById('cfgToday').value = fmtDate(today);
 
       const endExclusive = addDays(end, 1);
 
-      const baseCalls    = parseFloat(document.getElementById('mCalls').value)    || 0;
-      const baseCredRate = parseFloat(document.getElementById('mCredits').value)  || 0;
-      const baseSelfRes  = parseFloat(document.getElementById('mSelfRes').value)  || 0;
-      const baseSenti    = parseFloat(document.getElementById('mSentiment').value)|| 0;
-      const baseXfer     = parseFloat(document.getElementById('mXfer').value)     || 0;
+      const baseCalls    = parseFloat(document.getElementById('mCalls').value)     || 0;
+      const baseCredRate = parseFloat(document.getElementById('mCredits').value)   || 0;
+      const baseSelfRes  = parseFloat(document.getElementById('mSelfRes').value)   || 0;
+      const baseSenti    = parseFloat(document.getElementById('mSentiment').value) || 0;
+      const baseXfer     = parseFloat(document.getElementById('mXfer').value)      || 0;
       const fcrRaw       = document.getElementById('mFCR').value;
       const fcr          = fcrRaw !== '' ? parseFloat(fcrRaw) : null;
-      const gAHT         = parseFloat(document.getElementById('gAHT').value)      || 0;
-      const gCred        = parseFloat(document.getElementById('gCredits').value)  || 0;
-      const gSelfRes     = parseFloat(document.getElementById('gSelfRes').value)  || 0;
-      const gSenti       = parseFloat(document.getElementById('gSentiment').value)|| 0;
-      const gXfer        = parseFloat(document.getElementById('gXfer').value)     || 0;
-      const gFCR         = parseFloat(document.getElementById('gFCR').value)      || 0;
+      const gAHT         = parseFloat(document.getElementById('gAHT').value)       || 0;
+      const gCred        = parseFloat(document.getElementById('gCredits').value)   || 0;
+      const gSelfRes     = parseFloat(document.getElementById('gSelfRes').value)   || 0;
+      const gSenti       = parseFloat(document.getElementById('gSentiment').value) || 0;
+      const gXfer        = parseFloat(document.getElementById('gXfer').value)      || 0;
+      const gFCR         = parseFloat(document.getElementById('gFCR').value)       || 0;
 
       const calls        = baseCalls + session.calls;
       const baseAHT      = parseFloat(document.getElementById('mAHT').value) || 0;
@@ -1430,17 +1747,49 @@
         cards.push({ name: 'Credits / Call', current: credits.toFixed(2), goal: '≤ ' + gCred.toFixed(2), status: under ? 'good' : credits <= gCred * 1.3 ? 'warn' : 'bad', barPct: Math.min(100, (gCred / Math.max(credits, 0.01)) * 100), insight: under ? `<span class="hi">At goal.</span> Total credits given: <span class="acc">$${totalCred.toFixed(2)}</span>.` : `Total credits: <span class="mid">$${totalCred.toFixed(2)}</span>. Current trend → end rate ≈ <span class="lo">${credits.toFixed(2)}</span>. At <span class="hi">$0</span> more credits → end rate ≈ <span class="${rIZ <= gCred ? 'hi' : 'lo'}">${rIZ.toFixed(2)}</span>.`, projection: under ? `Already at goal. Maintain ≤ $${gCred.toFixed(2)}/call.` : creditGoalDate ? `Based on your average calls, if you give <span class="hi">$0</span> more credits, you should reach goal by <span class="acc">${fmtDate(creditGoalDate)}</span>.` : `Based on your average calls, even at <span class="hi">$0</span> more credits, projected end rate is <span class="${rIZ <= gCred ? 'hi' : 'lo'}">${rIZ.toFixed(2)}</span> — ${rIZ <= gCred ? 'goal should be reachable by cycle end' : 'still above goal by cycle end'}.` });
       }
 
+      // ── pctCard: guarded against near-zero goal ──────────────────────────
       function pctCard(name, current, goal) {
         if (!goal) return null;
-        const pct = current / 100, gPct = goal / 100, over = current >= goal, goodSoFar = Math.round(pct * calls);
+        const pct = current / 100;
+        const gPct = goal / 100;
+        const over = current >= goal;
+        const goodSoFar = Math.round(pct * calls);
+
         if (over) {
-          const maxT = gPct > 0 ? goodSoFar / gPct : Infinity, absorb = Math.max(0, Math.floor(maxT - calls)), pG = goodSoFar + Math.round(pct * callsPerDay * wdRemaining), pR = projTotal > 0 ? (pG / projTotal * 100) : current;
-          return { name, current: current.toFixed(1) + '%', goal: '≥ ' + goal.toFixed(1) + '%', status: 'good', barPct: Math.min(100, (current / (goal * 1.2)) * 100), insight: `<span class="hi">Above goal by ${(current - goal).toFixed(1)}%.</span> Can absorb <span class="acc">${absorb}</span> more failure${absorb !== 1 ? 's' : ''} before dropping below ${goal.toFixed(1)}%.`, projection: `At current pace: end-of-cycle ≈ <span class="acc">${pR.toFixed(1)}%</span>.` }
+          // Guard: if gPct is extremely small, cap absorb to avoid Infinity display
+          const maxT = gPct > 0.001 ? goodSoFar / gPct : goodSoFar * 1000;
+          const absorb = Math.max(0, Math.floor(maxT - calls));
+          const pG = goodSoFar + Math.round(pct * callsPerDay * wdRemaining);
+          const pR = projTotal > 0 ? (pG / projTotal * 100) : current;
+          return {
+            name, current: current.toFixed(1) + '%', goal: '≥ ' + goal.toFixed(1) + '%',
+            status: 'good', barPct: Math.min(100, (current / (goal * 1.2)) * 100),
+            insight: `<span class="hi">Above goal by ${(current - goal).toFixed(1)}%.</span> Can absorb <span class="acc">${absorb}</span> more failure${absorb !== 1 ? 's' : ''} before dropping below ${goal.toFixed(1)}%.`,
+            projection: `At current pace: end-of-cycle ≈ <span class="acc">${pR.toFixed(1)}%</span>.`
+          };
         } else {
-          const d100 = (callsPerDay * (1 - gPct)) > 0 ? (gPct * calls - goodSoFar) / (callsPerDay * (1 - gPct)) : Infinity, dR = Math.ceil(d100), reach = isFinite(dR) && dR <= wdRemaining, pG = goodSoFar + Math.round(pct * callsPerDay * wdRemaining), pR = projTotal > 0 ? (pG / projTotal * 100) : current;
-          const cleanNeeded = gPct < 1 ? Math.ceil((gPct * calls - goodSoFar) / (1 - gPct)) : Infinity;
-          const cleanStr = isFinite(cleanNeeded) && cleanNeeded > 0 ? ` Need <span class="acc">${cleanNeeded}</span> consecutive clean call${cleanNeeded !== 1 ? 's' : ''} to reach goal.` : '';
-          return { name, current: current.toFixed(1) + '%', goal: '≥ ' + goal.toFixed(1) + '%', status: current >= goal * 0.97 ? 'warn' : 'bad', barPct: Math.min(100, (current / goal) * 100), insight: `<span class="lo">Below goal by ${(goal - current).toFixed(1)}%.</span>${cleanStr}`, projection: reach ? `At 100% success: goal in ~<span class="acc">${dR}</span> day${dR !== 1 ? 's' : ''} (~${fmtDate(workingDaysUntilGoal(today, wdRemaining, dR))}). Current pace → ${pR.toFixed(1)}%.` : `Current pace → <span class="lo">${pR.toFixed(1)}%</span>. May not reach goal this cycle.` }
+          // Guard: denominator is callsPerDay * (1 - gPct); protect against gPct ≥ 1
+          const denom = callsPerDay * (1 - Math.min(gPct, 0.9999));
+          const d100 = denom > 0 ? (gPct * calls - goodSoFar) / denom : Infinity;
+          const dR = Math.ceil(d100);
+          const reach = isFinite(dR) && dR <= wdRemaining;
+          const pG = goodSoFar + Math.round(pct * callsPerDay * wdRemaining);
+          const pR = projTotal > 0 ? (pG / projTotal * 100) : current;
+          const cleanNeeded = gPct < 0.9999
+            ? Math.ceil((gPct * calls - goodSoFar) / (1 - gPct))
+            : Infinity;
+          const cleanStr = isFinite(cleanNeeded) && cleanNeeded > 0
+            ? ` Need <span class="acc">${cleanNeeded}</span> consecutive clean call${cleanNeeded !== 1 ? 's' : ''} to reach goal.`
+            : '';
+          return {
+            name, current: current.toFixed(1) + '%', goal: '≥ ' + goal.toFixed(1) + '%',
+            status: current >= goal * 0.97 ? 'warn' : 'bad',
+            barPct: Math.min(100, (current / goal) * 100),
+            insight: `<span class="lo">Below goal by ${(goal - current).toFixed(1)}%.</span>${cleanStr}`,
+            projection: reach
+              ? `At 100% success: goal in ~<span class="acc">${dR}</span> day${dR !== 1 ? 's' : ''} (~${fmtDate(workingDaysUntilGoal(today, wdRemaining, dR))}). Current pace → ${pR.toFixed(1)}%.`
+              : `Current pace → <span class="lo">${pR.toFixed(1)}%</span>. May not reach goal this cycle.`
+          };
         }
       }
 
@@ -1448,13 +1797,29 @@
         pctCard('Self-Resolution',     selfRes, gSelfRes),
         pctCard('Sentiment',           senti,   gSenti),
         pctCard('Transfer Prevention', xfer,    gXfer),
-        fcr !== null && gFCR > 0 ? pctCard('First Call Resolution', fcr, gFCR) : { name: 'First Call Resolution', current: '—', goal: gFCR > 0 ? '≥ ' + gFCR.toFixed(1) + '%' : 'no goal set', status: 'neutral', barPct: 0, insight: `<span style="color:var(--muted)">No data yet — 12-day reporting lag.</span>`, projection: `Enter FCR % and goal above when data becomes available.` }
+        fcr !== null && gFCR > 0
+          ? pctCard('First Call Resolution', fcr, gFCR)
+          : { name: 'First Call Resolution', current: '—', goal: gFCR > 0 ? '≥ ' + gFCR.toFixed(1) + '%' : 'no goal set', status: 'neutral', barPct: 0, insight: `<span style="color:var(--muted)">No data yet — 12-day reporting lag.</span>`, projection: `Enter FCR % and goal above when data becomes available.` }
       ].filter(Boolean).forEach(c => cards.push(c));
 
-      document.getElementById('projectionsGrid').innerHTML = cards.map(c => `<div class="proj-card ${c.status}"><div class="proj-name">${c.name}</div><div class="proj-top"><div class="proj-cur ${c.status}">${c.current}</div><div class="proj-goal-lbl">goal ${c.goal}</div></div><div class="proj-bar-wrap"><div class="proj-bar ${c.status}" style="width:${Math.min(100, c.barPct).toFixed(1)}%"></div></div><div class="proj-insight">${c.insight}</div><div class="proj-proj">${c.projection}</div></div>`).join('');
+      document.getElementById('projectionsGrid').innerHTML = cards.map(c =>
+        `<div class="proj-card ${c.status}">
+          <div class="proj-name">${c.name}</div>
+          <div class="proj-top"><div class="proj-cur ${c.status}">${c.current}</div><div class="proj-goal-lbl">goal ${c.goal}</div></div>
+          <div class="proj-bar-wrap"><div class="proj-bar ${c.status}" style="width:${Math.min(100, c.barPct).toFixed(1)}%"></div></div>
+          <div class="proj-insight">${c.insight}</div>
+          <div class="proj-proj">${c.projection}</div>
+        </div>`
+      ).join('');
     }
 
-    document.querySelectorAll('#tab-scorecard input').forEach(el => el.addEventListener('input', recalc));
+    // Wire scorecard inputs to save + recalc
+    document.querySelectorAll('#tab-scorecard input').forEach(el => {
+      el.addEventListener('input', () => { saveScorecard(); recalc() });
+    });
+
+    // ─── INIT ─────────────────────────────────────────────────────────────────
+    loadScorecard();
     sessionSummary();
     recalc();
   </script>
