@@ -496,7 +496,7 @@
   let durations=[];      // seconds per timer-logged call
   let history=[];        // archived call sheets, newest first
   let callSeq=0;
-  function freshCall(active){return{active:!!active,start:active?Date.now():0,credit:0,xfer:false,miss:false,notes:[],dismissed:new Set(),addedCh:[]};}
+  function freshCall(active){return{active:!!active,start:active?Date.now():0,credit:0,xfer:false,miss:false,notes:[],dismissed:new Set(),channels:[]};}
   let call=freshCall(false);
   let lastEnts={phones:[],addresses:[],channels:[],amounts:[],maths:[]};
 
@@ -601,10 +601,14 @@
   function renderExtract(){
     clearTimeout(exTimer);
     const raw=extractEntities(callText());
-    const chMap=new Map();
-    raw.channels.forEach(c=>{if(!chMap.has(c.name.toLowerCase()))chMap.set(c.name.toLowerCase(),c);});
-    call.addedCh.forEach(c=>{if(!chMap.has(c.name.toLowerCase()))chMap.set(c.name.toLowerCase(),c);});
-    const channels=[...chMap.values()].filter(c=>!call.dismissed.has('ch:'+c.name.toLowerCase())).sort((a,b)=>aosIndex(a.name)-aosIndex(b.name));
+    // channels are unidirectional: text only ever ADDS to the list — deleting a note
+    // (or editing text away) never removes one. Only the channel card's ✕ removes.
+    raw.channels.forEach(c=>{
+      const k=c.name.toLowerCase();
+      if(call.dismissed.has('ch:'+k))return;
+      if(!call.channels.some(x=>x.name.toLowerCase()===k))call.channels.push(c);
+    });
+    const channels=[...call.channels].sort((a,b)=>aosIndex(a.name)-aosIndex(b.name));
     lastEnts={
       phones:raw.phones.filter(p=>!call.dismissed.has('ph:'+p)),
       addresses:raw.addresses.filter(a=>!call.dismissed.has('ad:'+a.raw.toLowerCase())),
@@ -661,9 +665,10 @@
         row.appendChild(el('span','x-val',c.name));
         const d=el('button','x-del','✕');
         d.addEventListener('click',()=>{
-          const ai=call.addedCh.findIndex(x=>x.name.toLowerCase()===c.name.toLowerCase());
-          if(ai!==-1)call.addedCh.splice(ai,1);
-          dismiss('ch:'+c.name.toLowerCase());
+          const k=c.name.toLowerCase();
+          const ci=call.channels.findIndex(x=>x.name.toLowerCase()===k);
+          if(ci!==-1)call.channels.splice(ci,1);
+          dismiss('ch:'+k); // also blocks re-extraction from text still containing it
         });
         row.appendChild(d);
         card.appendChild(row);
@@ -678,7 +683,7 @@
         const m=bestMatch(r);
         const entry=m?{name:m,custom:false}:{name:r,custom:true};
         call.dismissed.delete('ch:'+entry.name.toLowerCase());
-        call.addedCh.push(entry);
+        if(!call.channels.some(x=>x.name.toLowerCase()===entry.name.toLowerCase()))call.channels.push(entry);
         inp.value='';sugg.textContent='';
         renderExtract();
         const ni=panel.querySelector('.x-card.chan .x-add-input');if(ni)ni.focus();
