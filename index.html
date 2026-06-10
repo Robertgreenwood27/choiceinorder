@@ -478,7 +478,7 @@
   // NOTES
   let pinnedNotes=[];
   function detectPhone(s){const d=s.replace(/\D/g,'');if(d.length===10)return d;if(d.length===11&&d[0]==='1')return d.slice(1);return null;}
-  function detectMath(s){if(!/[+\-*\/]/.test(s))return null;if(/[a-df-wyzA-DF-WYZ]/.test(s))return null;try{const r=eval(s);if(typeof r!=='number'||!isFinite(r))return null;return`${s} = ${parseFloat(r.toFixed(10))}`;}catch(e){return null;}}
+  function detectMath(s){if(!/\d/.test(s)||!/[+\-*\/]/.test(s))return null;if(!/^[\d\s+\-*\/().,%]+$/.test(s))return null;const expr=s.replace(/,/g,'');try{const r=Function('"use strict";return('+expr+')')();if(typeof r!=='number'||!isFinite(r))return null;return`${s} = ${parseFloat(r.toFixed(10))}`;}catch(e){return null;}}
   function doClipboard(t,cb){if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(cb).catch(()=>fbCopy(t,cb));else fbCopy(t,cb);}
   function fbCopy(t,cb){const ta=document.createElement('textarea');ta.value=t;ta.style.cssText='position:fixed;opacity:0;top:0;left:0';document.body.appendChild(ta);ta.focus();ta.select();try{document.execCommand('copy');cb();}catch(e){}document.body.removeChild(ta);}
 
@@ -496,33 +496,22 @@
     const math = detectMath(v);
     if (math) return { type:'math', result:math };
 
-    // 3. ADDRESS — has a number at the start + a recognisable street suffix
+    // 3. ADDRESS — number at the start, plus a street suffix or state/zip signal
     const addrParts = splitAddress(v);
     const hasNum = addrParts.some(p=>p.label==='Street #');
-    const hasStreet = addrParts.some(p=>p.label==='Street Name');
-    if (hasNum && hasStreet) return { type:'address', parts:addrParts, raw:v };
+    const streetPart = addrParts.find(p=>p.label==='Street Name');
+    const hasStateZip = addrParts.some(p=>p.label==='State'||p.label==='ZIP');
+    if (hasNum && streetPart && (hasStateZip || SUFFIX_TEST.test(streetPart.value))) return { type:'address', parts:addrParts, raw:v };
 
-    // 4. CHANNELS — one or more tokens that fuzzy-match known channels
-    // Split on commas, semicolons, or newlines
+    // 4. CHANNELS — comma/semicolon/newline tokens, at least one must fuzzy-match a known channel
     const tokens = v.split(/[,;\n]+/).map(t=>t.trim()).filter(Boolean);
     if (tokens.length >= 1) {
-      const matched = [];
-      const customs = [];
-      for (const t of tokens) {
+      const seen = new Set();
+      const chList = tokens.map(t=>{
         const m = bestMatch(t);
-        if (m) matched.push(m);
-        else if (t.length >= 2) customs.push(t); // short garbage ignored
-      }
-      // Need at least one real match, or 2+ tokens that all look channel-ish
-      if (matched.length >= 1 || (tokens.length >= 2 && customs.length === tokens.length)) {
-        const allChannels = [...matched, ...customs.map(c=>({custom:true,name:c}))];
-        // Normalize: matched are strings, customs are objects — unify
-        const chList = tokens.map(t=>{
-          const m=bestMatch(t);
-          return m ? {name:m,custom:false} : {name:t,custom:true};
-        }).filter(c=>c.name.length>=2);
-        if (chList.length >= 1) return { type:'channels', channels:chList, raw:v };
-      }
+        return m ? {name:m, custom:false} : {name:t, custom:true};
+      }).filter(c=>c.name.length>=2 && !seen.has(c.name.toLowerCase()) && !!seen.add(c.name.toLowerCase()));
+      if (chList.some(c=>!c.custom)) return { type:'channels', channels:chList, raw:v };
     }
 
     // 5. Fallback — plain note
@@ -706,19 +695,42 @@
   function bestMatch(q){if(!q.trim())return null;const ql=q.trim().toLowerCase();if(ALIASES[ql])return ALIASES[ql];let best=null,bs=-1;for(const ch of AOS_ORDER){const s=fuzzyScore(ql,ch);if(s>bs){bs=s;best=ch;}}return bs>=50?best:null;}
 
   // ADDRESS
+  const US_STATES=new Set(['AL','AK','AZ','AR','CA','CO','CT','DE','DC','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','PR','RI','SC','SD','TN','TX','UT','VT','VA','VI','WA','WV','WI','WY']);
+  const STREET_SUFFIXES=['Alley','Aly','Anex','Anx','Arc','Arcade','Avenue','Ave','Bayou','Byu','Beach','Bch','Bend','Bnd','Bluff','Blf','Boulevard','Blvd','Bottom','Btm','Branch','Br','Bridge','Brg','Brook','Brk','Bypass','Byp','Camp','Cp','Canyon','Cyn','Cape','Cpe','Causeway','Cswy','Center','Ctr','Cen','Circle','Cir','Cliff','Clf','Club','Clb','Common','Cmn','Corner','Cor','Corners','Cors','Course','Crse','Court','Ct','Courts','Cts','Cove','Cv','Creek','Crk','Crescent','Cres','Crest','Crst','Crossing','Xing','Curve','Curv','Dale','Dl','Dam','Dm','Divide','Div','Drive','Dr','Estates','Estate','Est','Expressway','Expy','Extension','Ext','Falls','Fall','Fls','Ford','Frd','Forge','Frg','Forks','Fork','Frk','Frks','Freeway','Fwy','Gardens','Garden','Gdns','Gdn','Gateway','Gtwy','Glen','Gln','Green','Grn','Grove','Grv','Harbor','Hbr','Haven','Hvn','Heights','Hgts','Hts','Highway','Hwy','Hills','Hill','Hls','Hollow','Holw','Inlet','Inlt','Island','Is','Isle','Junction','Jct','Key','Ky','Knoll','Knl','Lake','Lk','Lane','Ln','Landing','Lndg','Light','Lgt','Loop','Mall','Manor','Mnr','Meadows','Meadow','Mdws','Mdw','Mews','Mills','Mill','Mls','Ml','Mission','Msn','Mountain','Mtn','Mount','Mt','Motorway','Mtwy','Neck','Nck','Orchard','Orch','Oval','Ovl','Overlook','Ovlk','Parkway','Pkwy','Pky','Park','Pk','Pass','Path','Pike','Pke','Pines','Pine','Pnes','Pne','Place','Pl','Plains','Plain','Plns','Pln','Plaza','Plz','Points','Point','Pts','Pt','Port','Prt','Prairie','Pr','Promenade','Radial','Rad','Ramp','Ranch','Rnch','Rapid','Rpd','Ridge','Rdg','River','Riv','Road','Rd','Row','Rue','Run','Shoals','Shoal','Shls','Shl','Shore','Shr','Skyway','Skwy','Springs','Spring','Spgs','Spg','Spur','Square','Sq','Station','Sta','Stravenue','Stra','Stream','Strm','Street','St','Summit','Smt','Terrace','Ter','Throughway','Trwy','Turnpike','Tpke','Trace','Trce','Track','Trak','Trail','Trl','Trailer','Trlr','Tunnel','Tunn','Union','Un','Valley','Vly','Via','View','Vw','Village','Vlg','Vista','Vis','Walk','Wall','Way','Wells','Well','Wls','Wl','Wye'];
+  // Suffixes that almost never appear as city-name words; used to break ties so
+  // cities like Park Ridge / Falls Church / Lake Forest don't steal the split
+  const COMMON_SUFFIXES=new Set(['street','st','avenue','ave','boulevard','blvd','drive','dr','lane','ln','road','rd','court','ct','circle','cir','place','pl','terrace','ter','parkway','pkwy','pky','highway','hwy','way','trail','trl','square','sq','plaza','plz','crescent','cres','turnpike','tpke','expressway','expy','freeway','fwy','loop','pike','pke','alley','aly','crossing','xing','run','row','rue','pass','path','walk']);
+  const SUFFIX_SRC='\\b('+[...STREET_SUFFIXES].sort((a,b)=>b.length-a.length).map(x=>x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')\\b';
+  const SUFFIX_PAT=new RegExp(SUFFIX_SRC,'gi');
+  const SUFFIX_TEST=new RegExp(SUFFIX_SRC,'i');
   function splitAddress(raw){
     const parts=[];let s=raw.trim().replace(/\r\n|\r|\n/g,' ').replace(/\s+/g,' ');
     const zipM=s.match(/\b(\d{5})(?:-\d{4})?\s*$/);const zip=zipM?zipM[1]:'';if(zipM)s=s.slice(0,zipM.index).trim().replace(/,\s*$/,'');
-    const stateM=s.match(/(?:,|\s)\s*([A-Za-z]{2})\s*$/);const state=stateM?stateM[1].toUpperCase():'';if(stateM)s=s.slice(0,stateM.index).trim().replace(/,\s*$/,'');
-    const APT_RE=/\b(Apt\.?|Unit|Suite|Ste\.?|#|Lot|Bldg|Fl(?:oor)?)\s*[\w-]+/i;const aptM=s.match(APT_RE);let apt='';
-    if(aptM){apt=aptM[0].trim();s=(s.slice(0,aptM.index)+s.slice(aptM.index+aptM[0].length)).trim().replace(/,\s*$/,'');}
-    const suffixes=['Alley','Aly','Anex','Anx','Arc','Arcade','Avenue','Ave','Bayou','Byu','Beach','Bch','Bend','Bnd','Bluff','Blf','Boulevard','Blvd','Bottom','Btm','Branch','Br','Bridge','Brg','Brook','Brk','Bypass','Byp','Camp','Cp','Canyon','Cyn','Cape','Cpe','Causeway','Cswy','Center','Ctr','Cen','Circle','Cir','Cliff','Clf','Club','Clb','Common','Cmn','Corner','Cor','Corners','Cors','Course','Crse','Court','Ct','Courts','Cts','Cove','Cv','Creek','Crk','Crescent','Cres','Crest','Crst','Crossing','Xing','Curve','Curv','Dale','Dl','Dam','Dm','Divide','Div','Drive','Dr','Estates','Estate','Est','Expressway','Expy','Extension','Ext','Falls','Fall','Fls','Ford','Frd','Forge','Frg','Forks','Fork','Frk','Frks','Freeway','Fwy','Gardens','Garden','Gdns','Gdn','Gateway','Gtwy','Glen','Gln','Green','Grn','Grove','Grv','Harbor','Hbr','Haven','Hvn','Heights','Hgts','Hts','Highway','Hwy','Hills','Hill','Hls','Hollow','Holw','Inlet','Inlt','Island','Is','Isle','Junction','Jct','Key','Ky','Knoll','Knl','Lake','Lk','Lane','Ln','Landing','Lndg','Light','Lgt','Loop','Mall','Manor','Mnr','Meadows','Meadow','Mdws','Mdw','Mews','Mills','Mill','Mls','Ml','Mission','Msn','Mountain','Mtn','Mount','Mt','Motorway','Mtwy','Neck','Nck','Orchard','Orch','Oval','Ovl','Overlook','Ovlk','Parkway','Pkwy','Pky','Park','Pk','Pass','Path','Pike','Pke','Pines','Pine','Pnes','Pne','Place','Pl','Plains','Plain','Plns','Pln','Plaza','Plz','Points','Point','Pts','Pt','Port','Prt','Prairie','Pr','Promenade','Radial','Rad','Ramp','Ranch','Rnch','Rapid','Rpd','Ridge','Rdg','River','Riv','Road','Rd','Row','Rue','Run','Shoals','Shoal','Shls','Shl','Shore','Shr','Skyway','Skwy','Springs','Spring','Spgs','Spg','Spur','Square','Sq','Station','Sta','Stravenue','Stra','Stream','Strm','Street','St','Summit','Smt','Terrace','Ter','Throughway','Trwy','Turnpike','Tpke','Trace','Trce','Track','Trak','Trail','Trl','Trailer','Trlr','Tunnel','Tunn','Union','Un','Valley','Vly','Via','View','Vw','Village','Vlg','Vista','Vis','Walk','Wall','Way','Wells','Well','Wls','Wl','Wye'];
-    const srt=[...suffixes].sort((a,b)=>b.length-a.length);
-    const SUFFIX_PAT=new RegExp('\\b('+srt.map(x=>x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')\\b','gi');
-    const allM=[...s.matchAll(SUFFIX_PAT)];let city='',chosenMatch=null;
-    for(let i=allM.length-1;i>=0;i--){const m=allM[i];const after=s.slice(m.index+m[0].length).trim().replace(/^[,\s]+/,'');if(after&&!/^\d/.test(after)){chosenMatch=m;break;}}
-    if(chosenMatch){const se=chosenMatch.index+chosenMatch[0].length;city=s.slice(se).trim().replace(/^[,\s]+/,'');s=s.slice(0,se).trim();}
-    else if(allM.length===0){const cm=s.match(/^(.+),\s*([^,]+)$/);if(cm){city=cm[2].trim();s=cm[1].trim();}}
+    const stateM=s.match(/(?:,|\s)\s*([A-Za-z]{2})\.?\s*$/);let state='';
+    if(stateM&&US_STATES.has(stateM[1].toUpperCase())){state=stateM[1].toUpperCase();s=s.slice(0,stateM.index).trim().replace(/,\s*$/,'');}
+    const APT_RE=/\b(?:Apt|Apartment|Unit|Suite|Ste|Lot|Bldg|Building|Rm|Room|Fl|Floor)\.?\s+[\w-]+|#\s*[\w-]+/i;
+    const aptM=s.match(APT_RE);let apt='';
+    if(aptM){apt=aptM[0].trim();s=(s.slice(0,aptM.index)+' '+s.slice(aptM.index+aptM[0].length)).replace(/\s+/g,' ').replace(/\s,/g,',').replace(/,\s*,/g,',').trim().replace(/^,|,$/g,'').trim();}
+    let city='';
+    const commaIdx=s.lastIndexOf(',');
+    if(commaIdx!==-1){
+      // a comma is authoritative — everything after the last one is the city
+      city=s.slice(commaIdx+1).trim();
+      s=s.slice(0,commaIdx).replace(/,\s*$/,'').trim();
+    }else{
+      const allM=[...s.matchAll(SUFFIX_PAT)];
+      const usable=allM.filter(m=>{const after=s.slice(m.index+m[0].length).trim();return after&&!/^\d/.test(after);});
+      const common=usable.filter(m=>COMMON_SUFFIXES.has(m[1].toLowerCase()));
+      const chosen=common.length?common[common.length-1]:(usable.length?usable[usable.length-1]:null);
+      if(chosen){
+        let se=chosen.index+chosen[0].length;
+        // post-directionals (Main St NW) stay with the street, not the city
+        const dirM=s.slice(se).match(/^\s+(NE|NW|SE|SW|N|S|E|W)\b\.?/i);
+        if(dirM)se+=dirM[0].length;
+        city=s.slice(se).trim().replace(/^[,\s]+/,'');
+        s=s.slice(0,se).trim();
+      }
+    }
     const numM=s.match(/^(\d+\S*)\s+/);const sn=numM?numM[1]:'';if(numM)s=s.slice(numM[0].length).trim();const street=s.trim();
     if(sn)parts.push({label:'Street #',value:sn});if(street)parts.push({label:'Street Name',value:street});if(apt)parts.push({label:'Apt / Unit',value:apt});if(city)parts.push({label:'City',value:city});if(state)parts.push({label:'State',value:state});if(zip)parts.push({label:'ZIP',value:zip});
     return parts;
@@ -729,7 +741,8 @@
   let daysOff=new Set();
   document.querySelectorAll('.day-toggle').forEach(btn=>{const d=parseInt(btn.dataset.day);btn.addEventListener('click',()=>{daysOff.has(d)?daysOff.delete(d):daysOff.add(d);btn.classList.toggle('active');recalc();});});
   function addDays(date,days){const d=new Date(date);d.setDate(d.getDate()+days);return d;}
-  function getScorecardCycle(today=new Date()){const y=today.getFullYear(),m=today.getMonth(),day=today.getDate();let start,end;if(day<=28){end=new Date(y,m,28);start=new Date(y,m-1,29);if(m===2)start=new Date(y,2,1);}else{start=new Date(y,m,29);end=new Date(y,m+1,28);}return{start,end,today};}
+  // Date rollover handles Feb: new Date(y,1,29) → Mar 1 in non-leap years, Feb 29 in leap years
+  function getScorecardCycle(today=new Date()){const y=today.getFullYear(),m=today.getMonth(),day=today.getDate();let start,end;if(day<=28){end=new Date(y,m,28);start=new Date(y,m-1,29);}else{start=new Date(y,m,29);end=new Date(y,m+1,28);}return{start,end,today};}
   function countWorkingDays(from,to){let c=0;const cur=new Date(from);while(cur<to){if(!daysOff.has(cur.getDay()))c++;cur.setDate(cur.getDate()+1);}return c;}
   function workingDaysUntilGoal(from,wr,extra){let c=0;const cur=new Date(from);while(c<extra){cur.setDate(cur.getDate()+1);if(!daysOff.has(cur.getDay()))c++;}return cur;}
   function fmtDate(d){return`${d.getMonth()+1}/${String(d.getDate()).padStart(2,'0')}`;}
@@ -754,6 +767,11 @@
   document.getElementById('undoSelfRes').addEventListener('click',()=>{if(session.selfResMiss>0){session.selfResMiss--;updateTally();}});
   document.getElementById('logReset').addEventListener('click',()=>{session={calls:0,xfers:0,credits:0,selfResMiss:0,todayAHT:null};updateTally();});
 
+  // Enter submits the amount inputs — keeps hands on the keyboard
+  [['hudCreditAmt','hudCredit'],['logCreditAmt','logCredit'],['logAHTToday','logAHT']].forEach(([inp,btn])=>{
+    document.getElementById(inp).addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();document.getElementById(btn).click();}});
+  });
+
   function recalc(){
     const{start,end,today}=getScorecardCycle();
     document.getElementById('cfgStart').value=fmtDate(start);document.getElementById('cfgEnd').value=fmtDate(end);document.getElementById('cfgToday').value=fmtDate(today);
@@ -764,11 +782,12 @@
     const totalSec=aht*calls,baseTotalCred=baseCredRate*baseCalls,totalCred=baseTotalCred+session.credits,credits=calls>0?totalCred/calls:baseCredRate;
     const baseGoodSR=Math.round((baseSelfRes/100)*baseCalls),sessGoodSR=Math.max(0,session.calls-session.selfResMiss),selfRes=calls>0?((baseGoodSR+sessGoodSR)/calls)*100:baseSelfRes;
     const senti=baseSenti,basePrev=Math.round((baseXfer/100)*baseCalls),sessPrev=Math.max(0,session.calls-session.xfers),xfer=calls>0?((basePrev+sessPrev)/calls)*100:baseXfer;
-    const wdElapsed=countWorkingDays(start,today),wdTotal=countWorkingDays(start,endX),wdRemaining=countWorkingDays(today,endX),cyclePct=wdTotal>0?Math.min(100,(wdElapsed/wdTotal)*100):0,callsPerDay=wdElapsed>0?calls/wdElapsed:0,projTotal=calls+(callsPerDay*wdRemaining);
+    // today counts as elapsed (session calls are today's), never as remaining — avoids double-counting it in projections
+    const todayX=addDays(today,1),wdElapsed=countWorkingDays(start,todayX),wdTotal=countWorkingDays(start,endX),wdRemaining=countWorkingDays(todayX,endX),cyclePct=wdTotal>0?Math.min(100,(wdElapsed/wdTotal)*100):0,callsPerDay=wdElapsed>0?calls/wdElapsed:0,projTotal=calls+(callsPerDay*wdRemaining);
     document.getElementById('cycleDateRange').textContent=`${fmtDate(start)} → ${fmtDate(end)}`;document.getElementById('cycleDaysInfo').textContent=`${wdElapsed} of ${wdTotal} working days elapsed · ${wdRemaining} remaining`;document.getElementById('cycleBarFill').style.width=cyclePct.toFixed(1)+'%';
     document.getElementById('paceStrip').innerHTML=[{label:'Calls/Day',value:callsPerDay.toFixed(1)},{label:'Total Calls',value:calls},{label:'Proj. Total Calls',value:Math.round(projTotal)},{label:'Working Days Left',value:wdRemaining},{label:'Cycle Progress',value:cyclePct.toFixed(0)+'%'}].map(p=>`<div class="pace-item"><span class="pace-lbl">${p.label}</span><span class="pace-val">${p.value}</span></div>`).join('');
     const cards=[];
-    if(gAHT>0){const under=aht<=gAHT,fn=projTotal-calls,maxFS=gAHT*projTotal-totalSec,maxAF=fn>0?maxFS/fn:0;cards.push({name:'Avg Handle Time',current:Math.round(aht)+'s',goal:'≤ '+gAHT+'s',status:under?'good':'bad',barPct:Math.min(100,(gAHT/Math.max(aht,1))*100),insight:under?`<span class="hi">${(gAHT-aht).toFixed(0)}s under goal.</span> Max avg on remaining calls: <span class="acc">${Math.round(maxAF)}s</span>.`:`<span class="lo">${(aht-gAHT).toFixed(0)}s over goal.</span> Remaining calls must avg <span class="mid">${Math.round(maxAF)}s</span>.`,projection:`Blended AHT: ${Math.round(aht)}s across ${calls} calls.`});}
+    if(gAHT>0){const under=aht<=gAHT,fn=projTotal-calls,maxAF=fn>0?(gAHT*projTotal-totalSec)/fn:null;const underIns=maxAF!==null?` Max avg on remaining calls: <span class="acc">${Math.round(maxAF)}s</span>.`:'';const overIns=maxAF===null?' No remaining call volume projected to recover with.':maxAF<=0?' <span class="lo">Not recoverable at projected volume</span> — even 0s calls won\'t reach goal.':` Remaining calls must avg <span class="mid">${Math.round(maxAF)}s</span>.`;cards.push({name:'Avg Handle Time',current:Math.round(aht)+'s',goal:'≤ '+gAHT+'s',status:under?'good':'bad',barPct:Math.min(100,(gAHT/Math.max(aht,1))*100),insight:under?`<span class="hi">${(gAHT-aht).toFixed(0)}s under goal.</span>${underIns}`:`<span class="lo">${(aht-gAHT).toFixed(0)}s over goal.</span>${overIns}`,projection:`Blended AHT: ${Math.round(aht)}s across ${calls} calls.`});}
     if(gCred>0){const under=credits<=gCred,rIZ=projTotal>0?totalCred/projTotal:credits;let cGD=null;if(!under&&callsPerDay>0){const rD=Math.ceil((totalCred/gCred-calls)/callsPerDay);if(rD>0&&rD<=wdRemaining)cGD=workingDaysUntilGoal(today,wdRemaining,rD);}cards.push({name:'Credits / Call',current:credits.toFixed(2),goal:'≤ '+gCred.toFixed(2),status:under?'good':credits<=gCred*1.3?'warn':'bad',barPct:Math.min(100,(gCred/Math.max(credits,0.01))*100),insight:under?`<span class="hi">At goal.</span> Total credits given: <span class="acc">$${totalCred.toFixed(2)}</span>.`:`Total credits: <span class="mid">$${totalCred.toFixed(2)}</span>. At <span class="hi">$0</span> more → end rate ≈ <span class="${rIZ<=gCred?'hi':'lo'}">${rIZ.toFixed(2)}</span>.`,projection:under?`Already at goal. Maintain ≤ $${gCred.toFixed(2)}/call.`:cGD?`At $0 more credits → goal by <span class="acc">${fmtDate(cGD)}</span>.`:`Projected end rate: <span class="${rIZ<=gCred?'hi':'lo'}">${rIZ.toFixed(2)}</span>.`});}
     function pctCard(name,current,goal){if(!goal)return null;const pct=current/100,gPct=goal/100,over=current>=goal,goodSoFar=Math.round(pct*calls);if(over){const maxT=gPct>0?goodSoFar/gPct:Infinity,absorb=Math.max(0,Math.floor(maxT-calls)),pG=goodSoFar+Math.round(pct*callsPerDay*wdRemaining),pR=projTotal>0?(pG/projTotal*100):current;return{name,current:current.toFixed(1)+'%',goal:'≥ '+goal.toFixed(1)+'%',status:'good',barPct:Math.min(100,(current/(goal*1.2))*100),insight:`<span class="hi">Above goal by ${(current-goal).toFixed(1)}%.</span> Can absorb <span class="acc">${absorb}</span> more failure${absorb!==1?'s':''} before dropping below ${goal.toFixed(1)}%.`,projection:`At current pace: end-of-cycle ≈ <span class="acc">${pR.toFixed(1)}%</span>.`};}else{const d100=(callsPerDay*(1-gPct))>0?(gPct*calls-goodSoFar)/(callsPerDay*(1-gPct)):Infinity,dR=Math.ceil(d100),reach=isFinite(dR)&&dR<=wdRemaining,pG=goodSoFar+Math.round(pct*callsPerDay*wdRemaining),pR=projTotal>0?(pG/projTotal*100):current;const cleanNeeded=gPct<1?Math.ceil((gPct*calls-goodSoFar)/(1-gPct)):Infinity;const cleanStr=isFinite(cleanNeeded)&&cleanNeeded>0?` Need <span class="acc">${cleanNeeded}</span> consecutive clean call${cleanNeeded!==1?'s':''} to reach goal.`:'';return{name,current:current.toFixed(1)+'%',goal:'≥ '+goal.toFixed(1)+'%',status:current>=goal*0.97?'warn':'bad',barPct:Math.min(100,(current/goal)*100),insight:`<span class="lo">Below goal by ${(goal-current).toFixed(1)}%.</span>${cleanStr}`,projection:reach?`At 100% success: goal in ~<span class="acc">${dR}</span> day${dR!==1?'s':''}. Current pace → ${pR.toFixed(1)}%.`:`Current pace → <span class="lo">${pR.toFixed(1)}%</span>. May not reach goal this cycle.`};}}
     [pctCard('Self-Resolution',selfRes,gSelfRes),pctCard('Sentiment',senti,gSenti),pctCard('Transfer Prevention',xfer,gXfer),fcr!==null&&gFCR>0?pctCard('First Call Resolution',fcr,gFCR):{name:'First Call Resolution',current:'—',goal:gFCR>0?'≥ '+gFCR.toFixed(1)+'%':'no goal set',status:'neutral',barPct:0,insight:`<span style="color:var(--muted)">No data yet — 12-day reporting lag.</span>`,projection:'Enter FCR % and goal above when data becomes available.'}].filter(Boolean).forEach(c=>cards.push(c));
