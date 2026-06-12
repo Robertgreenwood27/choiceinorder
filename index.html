@@ -275,7 +275,7 @@
       <div class="stream-col">
         <div class="note-stack" id="noteStack"></div>
         <textarea class="stream" id="stream"></textarea>
-        <div class="stream-hint">Shift+Enter = post note with copy button · notes + typing parse live → right panel · one address per line · comma-separate channels · $ amounts &amp; “credit 5.99” auto-detect · math like 12.50+8.99 solves itself</div>
+        <div class="stream-hint">Shift+Enter = post note with copy button · notes + typing parse live → right panel · one address per line · $ amounts &amp; “credit 5.99” auto-detect · math like 12.50+8.99 solves itself</div>
       </div>
       <div class="side-col">
         <span class="side-sec-title">Detected on this call</span>
@@ -364,31 +364,7 @@
   function fuzzyScore(q,t){q=q.toLowerCase();t=t.toLowerCase();if(t===q)return 1000;if(t.startsWith(q))return 500+(100-t.length);if(t.includes(q))return 200+(100-t.indexOf(q));const words=t.split(/\s+/);for(const w of words)if(w.startsWith(q))return 150;const acr=words.map(w=>w[0]).join('');if(acr===q)return 120;let qi=0;for(let ti=0;ti<t.length&&qi<q.length;ti++)if(t[ti]===q[qi])qi++;if(qi===q.length)return 50;return -1;}
   // loose match — for deliberate input (manual add box)
   function bestMatch(q){if(!q.trim())return null;const ql=q.trim().toLowerCase();if(ALIASES[ql])return ALIASES[ql];let best=null,bs=-1;for(const ch of AOS_ORDER){const s=fuzzyScore(ql,ch);if(s>bs){bs=s;best=ch;}}return bs>=50?best:null;}
-  // stricter match — for ambient extraction, where false positives are worse than misses
-  function chTokenMatch(q){const ql=q.trim().toLowerCase();if(!ql)return null;if(ALIASES[ql])return ALIASES[ql];let best=null,bs=-1;for(const ch of AOS_ORDER){const s=fuzzyScore(ql,ch);if(s>bs){bs=s;best=ch;}}return bs>=200?best:null;}
-  function chWordMatch(phrase){const ql=phrase.trim().toLowerCase();if(!ql)return null;if(ALIASES[ql])return ALIASES[ql];for(const ch of AOS_ORDER)if(ch.toLowerCase()===ql)return ch;return null;}
   // lines that look like channel lists → channel objects; prose lines → []
-  function extractChannelsFromLine(t){
-    const tokens=t.split(/[,;]+/).map(x=>x.trim()).filter(Boolean);
-    if(!tokens.length)return [];
-    const single=tokens.length===1;
-    if(single&&tokens[0].split(/\s+/).length>4)return []; // long single line = prose, not a channel jot
-    const res=[];let matchedTokens=0;
-    for(const tok of tokens){
-      const m=chTokenMatch(tok);
-      if(m){res.push({name:m,custom:false});matchedTokens++;continue;}
-      // exact word/bigram/trigram inside the token ("add espn please" → ESPN)
-      const words=tok.split(/\s+/);let found=false;
-      for(let i=0;i<words.length;i++){
-        let hit=null,len=0;
-        for(let L=Math.min(3,words.length-i);L>=1;L--){const h=chWordMatch(words.slice(i,i+L).join(' '));if(h){hit=h;len=L;break;}}
-        if(hit){res.push({name:hit,custom:false});found=true;i+=len-1;}
-      }
-      if(found)matchedTokens++;
-      else if(!single&&tok.length>=2&&tok.length<=20&&words.length<=3)res.push({name:tok,custom:true});
-    }
-    return matchedTokens>=1?res:[];
-  }
 
   // ADDRESS
   const US_STATES=new Set(['AL','AK','AZ','AR','CA','CO','CT','DE','DC','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','PR','RI','SC','SD','TN','TX','UT','VT','VA','VI','WA','WV','WI','WY']);
@@ -454,17 +430,12 @@
       const a=parseFloat(m[1].replace(/,/g,''));if(!a||a<=0)continue;
       const k=a.toFixed(2);if(!seenA.has(k)){seenA.add(k);ents.amounts.push(a);}
     }
-    const seenCh=new Set();
     for(const line of text.split('\n')){
       const t=line.trim();if(!t)continue;
       const parts=splitAddress(t);
       if(looksLikeAddress(parts)){ents.addresses.push({raw:t,parts});continue;}
       const math=detectMath(t);
       if(math){ents.maths.push(math);continue;}
-      for(const ch of extractChannelsFromLine(t)){
-        const k=ch.name.toLowerCase();
-        if(!seenCh.has(k)){seenCh.add(k);ents.channels.push(ch);}
-      }
     }
     return ents;
   }
@@ -601,13 +572,6 @@
   function renderExtract(){
     clearTimeout(exTimer);
     const raw=extractEntities(callText());
-    // channels are unidirectional: text only ever ADDS to the list — deleting a note
-    // (or editing text away) never removes one. Only the channel card's ✕ removes.
-    raw.channels.forEach(c=>{
-      const k=c.name.toLowerCase();
-      if(call.dismissed.has('ch:'+k))return;
-      if(!call.channels.some(x=>x.name.toLowerCase()===k))call.channels.push(c);
-    });
     const channels=[...call.channels].sort((a,b)=>aosIndex(a.name)-aosIndex(b.name));
     lastEnts={
       phones:raw.phones.filter(p=>!call.dismissed.has('ph:'+p)),
