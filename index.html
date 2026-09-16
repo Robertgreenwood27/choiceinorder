@@ -808,8 +808,7 @@
                 placeholder="Type a channel, press Enter to add…" autocomplete="off" spellcheck="false" autofocus>
             </div>
             <div class="ch-suggestion" id="chSuggestion"></div>
-            <div class="ch-hint"><kbd>Enter</kbd> to add &nbsp;·&nbsp; <kbd>Backspace</kbd> on empty to undo last
-              &nbsp;·&nbsp; partial names work</div>
+            <div class="ch-hint"><kbd>Enter</kbd> to add &nbsp;·&nbsp; partial names work</div>
           </div>
           <div class="ch-right">
             <div class="dup-warn" id="dupWarn">⚠ Duplicate detected</div>
@@ -1058,7 +1057,7 @@
     function renderBadge() { document.getElementById('ch-badge').textContent = `${selected.length} / 15`; document.getElementById('chCount').textContent = selected.length; document.getElementById('chCopy').disabled = selected.length === 0 }
     const chInp = document.getElementById('chTypeInput');
     chInp.addEventListener('input', updateSuggestion);
-    chInp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); const raw = chInp.value.trim(); if (!raw || selected.length >= 15) return; const m = bestMatch(raw); if (m) addChannel(m); else { customSet.add(raw); addChannel(raw) } chInp.value = ''; chInp.className = 'ch-type-input'; document.getElementById('chSuggestion').innerHTML = '' } if (e.key === 'Backspace' && chInp.value === '' && selected.length > 0) { const r = selected.pop(); customSet.delete(r); renderQueue(); renderBadge() } });
+    chInp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); const raw = chInp.value.trim(); if (!raw || selected.length >= 15) return; const m = bestMatch(raw); if (m) addChannel(m); else { customSet.add(raw); addChannel(raw) } chInp.value = ''; chInp.className = 'ch-type-input'; document.getElementById('chSuggestion').innerHTML = '' } });
     document.getElementById('chCopy').addEventListener('click', () => { const sorted = [...selected].sort((a, b) => aosIndex(a) - aosIndex(b)); navigator.clipboard.writeText(sorted.join(', ')).then(() => { const btn = document.getElementById('chCopy'); btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = 'Copy List', 1500) }) });
     document.getElementById('chClear').addEventListener('click', () => { selected = []; customSet.clear(); chInp.value = ''; chInp.className = 'ch-type-input'; document.getElementById('chSuggestion').innerHTML = ''; renderQueue(); renderBadge() });
     renderQueue(); renderBadge();
