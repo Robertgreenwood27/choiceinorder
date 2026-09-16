@@ -441,6 +441,16 @@
   }
 
   // ═══════════════ DOM / APP LAYER ═══════════════
+  // Backspace outside a text field can trigger the browser's "back" navigation,
+  // which silently wipes this call's in-memory state (nothing is saved). Block
+  // it unless focus is genuinely in something editable.
+  document.addEventListener('keydown',e=>{
+    if(e.key!=='Backspace')return;
+    const t=e.target;
+    const editable=t.isContentEditable||t.tagName==='INPUT'||t.tagName==='TEXTAREA';
+    if(!editable)e.preventDefault();
+  });
+
   function updateClock(){document.getElementById('clock').textContent=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});}
   updateClock();setInterval(updateClock,1000);
 
